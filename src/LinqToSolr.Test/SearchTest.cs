@@ -204,7 +204,21 @@ namespace SS.LinqToSolr.Test
             var lessThanOrEqual = _api.GetContext<TestDocument>().Where(x => x.Timestamp <= date).ToString();
             Assert.AreEqual(lessThanOrEqual, "q=(_timestamp:[* TO 2000-01-01T12:00:00.000Z])");
         }
-        
+
+        [TestMethod]
+        public void AndQuery()
+        {
+            var and = _api.GetContext<TestDocument>().Where(x => x.Title == "test" && x.Title == "test1").ToString();
+            Assert.AreEqual(and, "q=(title_s:test AND title_s:test1)");
+        }
+
+        [TestMethod]
+        public void OrQuery()
+        {
+            var or = _api.GetContext<TestDocument>().Where(x => x.Title == "test" || x.Title == "test1").ToString();
+            Assert.AreEqual(or, "q=(title_s:test AND title_s:test1)");
+        }
+
         #region Disposing
         private bool _disposed;
 

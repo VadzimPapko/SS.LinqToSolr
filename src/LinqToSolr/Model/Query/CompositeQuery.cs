@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using SS.LinqToSolr.Extensions;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -31,7 +32,7 @@ namespace SS.LinqToSolr.Model.Query
             {
                 var falsePredicat = "( OR ";
                 var truePredicat = "( AND ";
-                var q = string.Join(" AND ", Query.Select(x => $"({x})"));
+                var q = string.Join(" AND ", Query.Select(x => x.ToSolrGroup()));
                 sb.Append($"q={q.Replace(falsePredicat, "(").Replace(truePredicat, "(")}");
             }
             else
@@ -54,7 +55,7 @@ namespace SS.LinqToSolr.Model.Query
                     sb.Append($"&facet.field={(x.IsMultiFacet && x.Values != null && x.Values.Any() ? $"{{!ex={x.Field}}}" : "")}{x.Field}");
                     if (x.Values != null && x.Values.Any())
                     {
-                        sb.Append($"&fq={(x.IsMultiFacet ? $"{{!tag={x.Field}}}" : "")}{x.Field}:({string.Join(" OR ", x.Values.Select(v => v.Contains(" ") ? $"\"{v}\"" : v))})");
+                        sb.Append($"&fq={(x.IsMultiFacet ? $"{{!tag={x.Field}}}" : "")}{x.Field}:{string.Join(" OR ", x.Values.Select(v => v.ToSearchValue())).ToSolrGroup()}");
                     }
                 });
             }
@@ -64,7 +65,7 @@ namespace SS.LinqToSolr.Model.Query
 
             if (QueryFilters.Any())
             {
-                var fq = string.Join(" AND ", QueryFilters.Select(x => $"({x})"));
+                var fq = string.Join(" AND ", QueryFilters.Select(x => x.ToSolrGroup()));
                 sb.Append($"&fq={fq}");
             }
 

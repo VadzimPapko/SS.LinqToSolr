@@ -85,35 +85,6 @@ namespace SS.LinqToSolr.Extensions
                 source.Expression,
                 Expression.Constant(term)
             }));
-        }
-
-        ///https://lucene.apache.org/solr/guide/6_6/the-standard-query-parser.html
-        ///http://www.solrtutorial.com/solr-query-syntax.html
-        ///Proximity matching "foo bar"~4
-        ///Range searches mod_date:[20020101 TO 20030101]
-        ///Boosts (title:foo OR title:bar)^1.5 (body:foo OR body:bar)
-        ///A * may be used for either or both endpoints to specify an open-ended range query.
-
-        //        field:[* TO 100] finds all field values less than or equal to 100
-
-        //field:[100 TO *] finds all field values greater than or equal to 100
-
-        //field:[* TO *] matches all documents with the field
-
-        //Pure negative queries(all clauses prohibited) are allowed.
-        //-inStock:false finds all field values where inStock is not false
-
-        //-field:[* TO *] finds all documents without a value for field
-
-        //A hook into FunctionQuery syntax. Quotes will be necessary to encapsulate the function when it includes parentheses.
-
-
-        //Example: _val_:myfield
-
-        //Example: _val_:"recip(rord(myfield),1,2,3)"
-
-
-        //Nested query support for any type of query parser (via QParserPlugin). Quotes will often be necessary to encapsulate the nested query if it contains reserved characters.
-        //Example: _query_:"{!dismax qf=myfield}how now brown cow"
+        }        
     }
 }

@@ -54,6 +54,7 @@
     <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MethodExtensionsTest.cs" />
     <Compile Include="PredicateBuilder.cs" />
     <Compile Include="TestDocument.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

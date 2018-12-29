@@ -106,7 +106,7 @@ namespace SS.LinqToSolr
             return val;
         }
 
-        private Expression VisitExtensionMethod(MethodCallExpression m)
+        private Expression VisitQueryableExtensionMethod(MethodCallExpression m)
         {
             switch (m.Method.Name)
             {
@@ -241,16 +241,67 @@ namespace SS.LinqToSolr
             }
         }
 
+        private Expression VisitExtensionMethod(MethodCallExpression m)
+        {
+            switch (m.Method.Name)
+            {
+                case "Boost":
+                    if (m.Arguments.Count == 2)
+                    {
+                        var term = new ExpressionParser(_itemType).Parse(StripQuotes(m.Arguments[0])).Translate();
+                        var boost = GetValue(StripQuotes(m.Arguments[1]));
+                        _compositeQuery.Write($"{term.ToSolrGroup()}^{boost}");
+                    }
+                    return m;
+                case "ConstantScore":
+                    if (m.Arguments.Count == 2)
+                    {
+                        var term = new ExpressionParser(_itemType).Parse(StripQuotes(m.Arguments[0])).Translate();
+                        var score = GetValue(StripQuotes(m.Arguments[1]));
+                        _compositeQuery.Write($"{term.ToSolrGroup()}^={score}");
+                    }                    
+                    return m;
+                case "Fuzzy":
+                    if (m.Arguments.Count == 3)
+                    {
+                        var field = GetValue(StripQuotes(m.Arguments[0]));
+                        var value = GetValue(StripQuotes(m.Arguments[1])).ToSearchValue();
+                        var distance = GetValue(StripQuotes(m.Arguments[2]));
+                        _compositeQuery.Write($"{field}:{value}~{distance}");
+                    }
+                    else if (m.Arguments.Count == 2)
+                    {
+                        var field = GetValue(StripQuotes(m.Arguments[0]));
+                        var value = GetValue(StripQuotes(m.Arguments[1])).ToSearchValue();                        
+                        _compositeQuery.Write($"{field}:{value}~");
+                    }
+                    return m;
+                case "Proximity":
+                    if (m.Arguments.Count == 3)
+                    {
+                        var field = GetValue(StripQuotes(m.Arguments[0]));
+                        var value = GetValue(StripQuotes(m.Arguments[1])).ToSearchValue();
+                        var distance = GetValue(StripQuotes(m.Arguments[2]));
+                        _compositeQuery.Write($"{field}:{value}~{distance}");
+                    }
+                    return m;
+                default:
+                    throw new NotSupportedException($"'{m.Method.Name}' is not supported");
+            }
+        }
+
         protected override Expression VisitMethodCall(MethodCallExpression m)
         {
             if (m.Method.DeclaringType == typeof(Queryable))
                 return VisitQueryableMethod(m);
             if (m.Method.DeclaringType == typeof(QueryableExtensions))
-                return VisitExtensionMethod(m);
+                return VisitQueryableExtensionMethod(m);
             if (m.Method.DeclaringType == typeof(string))
                 return VisitStringMethod(m);
             if (m.Method.DeclaringType == _itemType || _itemType.IsSubclassOf(m.Method.DeclaringType) || m.Method.DeclaringType.IsInterface && _itemType.GetInterfaces().Any(x => x == m.Method.DeclaringType))
                 return VisitItemMethod(m);
+            if (m.Method.DeclaringType == typeof(MethodExtensions))
+                return VisitExtensionMethod(m);
 
             throw new NotSupportedException($"'{m.Method.Name}' is not supported");
         }
