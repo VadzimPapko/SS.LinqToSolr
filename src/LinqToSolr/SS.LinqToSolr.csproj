@@ -62,13 +62,14 @@
     <Compile Include="Models\SearchResponse\Response.cs" />
     <Compile Include="Models\SearchResponse\ResponseNode.cs" />
     <Compile Include="Models\SearchResponse\Spellcheck.cs" />
-    <Compile Include="PredicateBuilder.cs" />
+    <Compile Include="Common\PredicateBuilder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Query.cs" />
-    <Compile Include="QueryProvider.cs" />
-    <Compile Include="ExpressionParser.cs" />
+    <Compile Include="Common\Query.cs" />
+    <Compile Include="Common\QueryProvider.cs" />
+    <Compile Include="ExpressionParsers\ExpressionParser.cs" />
     <Compile Include="SolrQueryProvider.cs" />
-    <Compile Include="SolrService.cs" />
+    <Compile Include="ISolrService.cs" />
+    <Compile Include="SearchContext.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

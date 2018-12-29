@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace SS.LinqToSolr
+namespace SS.LinqToSolr.Common
 {
     public static class PredicateBuilder
     {

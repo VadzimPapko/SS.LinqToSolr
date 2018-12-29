@@ -7,9 +7,9 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace SS.LinqToSolr
+namespace SS.LinqToSolr.ExpressionParsers
 {
-    public sealed class ExpressionParser : ExpressionVisitor
+    public class ExpressionParser : ExpressionVisitor
     {
         private Type _itemType { get; set; }
         private CompositeQuery _compositeQuery = new CompositeQuery();
@@ -203,10 +203,39 @@ namespace SS.LinqToSolr
             switch (m.Method.Name)
             {
                 case "Where":
-                case "First":
-                case "FirstOrDefault":
                     _compositeQuery.Query.Add(new ExpressionParser(_itemType).Parse(((LambdaExpression)StripQuotes(m.Arguments[1])).Body).Translate());
                     Visit(StripQuotes(m.Arguments[0]));
+                    return m;
+                case "Count":
+                    if (m.Arguments.Count == 1)
+                    {
+                        Visit(StripQuotes(m.Arguments[0]));
+                    }
+                    else if (m.Arguments.Count == 2)
+                    {
+                        _compositeQuery.Query.Add(new ExpressionParser(_itemType).Parse(StripQuotes(m.Arguments[1])).Translate());
+                        Visit(StripQuotes(m.Arguments[0]));
+                    }
+                    _compositeQuery.ScalarMethods.Add(m.Method);
+                    return m;
+                case "First":
+                case "FirstOrDefault":
+                case "Last":
+                case "LastOrDefault":
+                case "Single":
+                case "SingleOrDefault":
+                    if (m.Arguments.Count == 1)
+                    {
+                        Visit(StripQuotes(m.Arguments[0]));
+                    }
+                    else if(m.Arguments.Count == 2)
+                    {
+                        _compositeQuery.Query.Add(new ExpressionParser(_itemType).Parse(StripQuotes(m.Arguments[1])).Translate());
+                        Visit(StripQuotes(m.Arguments[0]));
+                    }
+                    
+                    _compositeQuery.Take = 1;
+                    _compositeQuery.ScalarMethods.Add(m.Method);
                     return m;
                 case "OrderBy":
                 case "ThenBy":
@@ -259,7 +288,7 @@ namespace SS.LinqToSolr
                         var term = new ExpressionParser(_itemType).Parse(StripQuotes(m.Arguments[0])).Translate();
                         var score = GetValue(StripQuotes(m.Arguments[1]));
                         _compositeQuery.Write($"{term.ToSolrGroup()}^={score}");
-                    }                    
+                    }
                     return m;
                 case "Fuzzy":
                     if (m.Arguments.Count == 3)
@@ -272,7 +301,7 @@ namespace SS.LinqToSolr
                     else if (m.Arguments.Count == 2)
                     {
                         var field = GetValue(StripQuotes(m.Arguments[0]));
-                        var value = GetValue(StripQuotes(m.Arguments[1])).ToSearchValue();                        
+                        var value = GetValue(StripQuotes(m.Arguments[1])).ToSearchValue();
                         _compositeQuery.Write($"{field}:{value}~");
                     }
                     return m;
@@ -304,11 +333,6 @@ namespace SS.LinqToSolr
                 return VisitExtensionMethod(m);
 
             throw new NotSupportedException($"'{m.Method.Name}' is not supported");
-        }
-
-        protected override Expression VisitUnary(UnaryExpression u)
-        {
-            throw new NotSupportedException($"The unary operators is not supported");
         }
 
         protected override Expression VisitBinary(BinaryExpression b)

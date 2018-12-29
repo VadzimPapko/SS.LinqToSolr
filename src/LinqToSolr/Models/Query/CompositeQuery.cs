@@ -81,6 +81,6 @@ namespace SS.LinqToSolr.Models.Query
                 sb.Append($"&rows={Take}");
 
             return sb.ToString();
-        }
+        }        
     }
 }

@@ -55,11 +55,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaseSolrTest.cs" />
+    <Compile Include="FakeSearchContext.cs" />
     <Compile Include="QueryableMethodsTest.cs" />
     <Compile Include="QueryableMethodExtensionsTest.cs" />
     <Compile Include="MethodExtensionsTest.cs" />
     <Compile Include="Models\TestDocument.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ScalarMethodsTest.cs" />
     <Compile Include="QueryWithPredicateBuilderTest.cs" />
     <Compile Include="QueryCommonTest.cs" />
   </ItemGroup>

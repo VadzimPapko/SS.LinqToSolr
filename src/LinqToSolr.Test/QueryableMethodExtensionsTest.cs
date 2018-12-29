@@ -16,28 +16,28 @@ namespace SS.LinqToSolr.Test
         public void PlainQuery()
         {
             var test = "test";
-            var plainQuery = _api.GetContext<TestDocument>().Query(test).ToString();
+            var plainQuery = _api.GetQueryable<TestDocument>().Query(test).ToString();
             Assert.AreEqual(plainQuery, "q=(test)");
         }
 
         [TestMethod]
         public void FilterEqualsQuery()
         {
-            var filterEqualsQuery = _api.GetContext<TestDocument>().Filter(x => x.Title == "test").ToString();
+            var filterEqualsQuery = _api.GetQueryable<TestDocument>().Filter(x => x.Title == "test").ToString();
             Assert.AreEqual(filterEqualsQuery, "q=*:*&fq=(title_s:test)");
         }
 
         [TestMethod]
         public void PageQuery()
         {
-            var pageQuery = _api.GetContext<TestDocument>().Page(0, 4).ToString();
+            var pageQuery = _api.GetQueryable<TestDocument>().Page(0, 4).ToString();
             Assert.AreEqual(pageQuery, "q=*:*&start=0&rows=4");
         }
         
         [TestMethod]
         public void FacetQuery()
         {
-            var facetQuery = _api.GetContext<TestDocument>();
+            var facetQuery = _api.GetQueryable<TestDocument>();
             var facets = new Dictionary<string, List<string>> { { "Author", new List<string> { "test", "test test" } } };
             foreach (var facet in facets)
             {
@@ -50,7 +50,7 @@ namespace SS.LinqToSolr.Test
         [TestMethod]
         public void MultifacetQuery()
         {
-            var multifacetQuery = _api.GetContext<TestDocument>();
+            var multifacetQuery = _api.GetQueryable<TestDocument>();
             var multifacets = new Dictionary<string, List<string>> { { "Author", new List<string> { "test" } }, { "Approver", new List<string> { "LastName" } } };
             foreach (var facet in multifacets)
             {
@@ -64,14 +64,14 @@ namespace SS.LinqToSolr.Test
         public void FacetQueryBykey()
         {
             var author = "Author";
-            var facetQueryBykey = _api.GetContext<TestDocument>().Facet(x => x[author]).ToString();
+            var facetQueryBykey = _api.GetQueryable<TestDocument>().Facet(x => x[author]).ToString();
             Assert.AreEqual(facetQueryBykey, "q=*:*&facet.field=Author&facet=on");
         }
 
         [TestMethod]
         public void PivotQuery()
         {
-            var pivotQuery = _api.GetContext<TestDocument>().PivotFacet(x => x.Facet(f => f.DocumentId).Facet(f => f.Type)).ToString();
+            var pivotQuery = _api.GetQueryable<TestDocument>().PivotFacet(x => x.Facet(f => f.DocumentId).Facet(f => f.Type)).ToString();
             Assert.AreEqual(pivotQuery, "q=*:*&facet.pivot=_documentid,_type&facet=on");
         }        
     }

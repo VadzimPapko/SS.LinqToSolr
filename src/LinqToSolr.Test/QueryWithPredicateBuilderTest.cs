@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Linq;
 using SS.LinqToSolr.Test.Models;
+using SS.LinqToSolr.Common;
 
 namespace SS.LinqToSolr.Test
 {
@@ -18,7 +19,7 @@ namespace SS.LinqToSolr.Test
             var list = new[] { "test1", "test2" };
             foreach (var i in list)
                 predicate = predicate.Or(p => p.Title == i);
-            var query = _api.GetContext<TestDocument>().Where(predicate).ToString();
+            var query = _api.GetQueryable<TestDocument>().Where(predicate).ToString();
             Assert.AreEqual(query, "q=(title_s:test1 OR title_s:test2)");
         }
 
@@ -29,7 +30,7 @@ namespace SS.LinqToSolr.Test
             var list = new[] { "test1", "test2" };
             foreach (var i in list)
                 predicate = predicate.And(p => p.Title == i);
-            var query = _api.GetContext<TestDocument>().Where(predicate).ToString();
+            var query = _api.GetQueryable<TestDocument>().Where(predicate).ToString();
             Assert.AreEqual(query, "q=(title_s:test1 AND title_s:test2)");
         }
     }

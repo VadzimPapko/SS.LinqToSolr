@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace SS.LinqToSolr
+namespace SS.LinqToSolr.Common
 {
     public class Query<T> : IQueryable<T>, IOrderedQueryable<T>
     {

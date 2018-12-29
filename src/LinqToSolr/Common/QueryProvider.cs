@@ -4,7 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace SS.LinqToSolr
+namespace SS.LinqToSolr.Common
 {
     public abstract class QueryProvider : IQueryProvider
     {

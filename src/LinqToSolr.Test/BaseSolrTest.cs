@@ -5,10 +5,10 @@ namespace SS.LinqToSolr.Test
 {
     public class BaseSolrTest : IDisposable
     {
-        protected SolrService _api;
+        protected SearchContext _api;
         public BaseSolrTest(string core)
         {
-            _api = new SolrService(ConfigurationManager.AppSettings["Solr.Url"], core);
+            _api = new SearchContext(ConfigurationManager.AppSettings["Solr.Url"], core);
         }
 
         #region Disposing

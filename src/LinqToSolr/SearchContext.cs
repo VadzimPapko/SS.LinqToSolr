@@ -2,26 +2,20 @@
 using SS.LinqToSolr.Models.SearchResponse;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 
 namespace SS.LinqToSolr
 {
-    public interface ISolrService
+    public class SearchContext : ISolrService, IDisposable
     {
-        Response<T> Search<T>(string query) where T : Document;
-        IEnumerable<T> SearchForIQueryable<T>(string query) where T : Document;
-        IQueryable<T> GetContext<T>() where T : Document;
-    }
+        public string LastQuery { get; private set; }
 
-    public class SolrService : ISolrService, IDisposable
-    {
         private readonly HttpClient _client;
         private readonly string _core;
         private readonly string _handler;
 
-        public SolrService(string url, string core, string handler = "select")
+        public SearchContext(string url, string core, string handler = "select")
         {
             _core = core;
             _handler = handler;
@@ -30,21 +24,17 @@ namespace SS.LinqToSolr
             {
                 BaseAddress = new Uri(url)
             };
-            //_client.DefaultRequestHeaders.Add(_Context.SSOHeader, _Context.User);
         }
 
-        public IQueryable<T> GetContext<T>() where T : Document
+        public IQueryable<T> GetQueryable<T>() where T : Document
         {
-            return new SolrQueryProvider<T>(this).CreateContext();
+            return new SolrQueryProvider<T>(this).GetQueryable();
         }
 
-        public IEnumerable<T> SearchForIQueryable<T>(string query) where T : Document
-        {
-            return Search<T>(query)?.ResponseNode.Documents;
-        }
 
         public Response<T> Search<T>(string query) where T : Document
         {
+            LastQuery = query;
             try
             {
                 query = query + "&wt=json";
@@ -52,7 +42,7 @@ namespace SS.LinqToSolr
 
                 var body = response.Content.ReadAsStringAsync().Result;
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
-                {                    
+                {
                     var result = JsonConvert.DeserializeObject<Response<T>>(body);
                     return result;
                 }
