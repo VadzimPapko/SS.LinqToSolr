@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SS.LinqToSolr.Model
+namespace SS.LinqToSolr.Models
 {
     public class Document
     {

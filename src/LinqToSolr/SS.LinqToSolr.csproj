@@ -50,22 +50,25 @@
     <Compile Include="Helpers\TypeSystem.cs" />
     <Compile Include="JsonConverters\FacetJsonConverter.cs" />
     <Compile Include="JsonConverters\SpellJsonConverter.cs" />
-    <Compile Include="Model\Query\CompositeQuery.cs" />
-    <Compile Include="Model\Query\OrderBy.cs" />
-    <Compile Include="Model\Query\PivotFacet.cs" />
-    <Compile Include="Model\Query\Facet.cs" />
-    <Compile Include="Model\Document.cs" />
-    <Compile Include="Model\SearchResponse\Error.cs" />
-    <Compile Include="Model\SearchResponse\IFacet.cs" />
-    <Compile Include="Model\SearchResponse\PivotFacetValue.cs" />
-    <Compile Include="Model\SearchResponse\FacetValue.cs" />
-    <Compile Include="Model\SearchResponse\Response.cs" />
-    <Compile Include="Model\SearchResponse\ResponseNode.cs" />
-    <Compile Include="Model\SearchResponse\Spellcheck.cs" />
+    <Compile Include="Models\Query\CompositeQuery.cs" />
+    <Compile Include="Models\Query\OrderBy.cs" />
+    <Compile Include="Models\Query\PivotFacet.cs" />
+    <Compile Include="Models\Query\Facet.cs" />
+    <Compile Include="Models\Document.cs" />
+    <Compile Include="Models\SearchResponse\Error.cs" />
+    <Compile Include="Models\SearchResponse\IFacet.cs" />
+    <Compile Include="Models\SearchResponse\PivotFacetValue.cs" />
+    <Compile Include="Models\SearchResponse\FacetValue.cs" />
+    <Compile Include="Models\SearchResponse\Response.cs" />
+    <Compile Include="Models\SearchResponse\ResponseNode.cs" />
+    <Compile Include="Models\SearchResponse\Spellcheck.cs" />
+    <Compile Include="PredicateBuilder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Query.cs" />
     <Compile Include="QueryProvider.cs" />
     <Compile Include="ExpressionParser.cs" />
+    <Compile Include="SolrQueryProvider.cs" />
+    <Compile Include="SolrService.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

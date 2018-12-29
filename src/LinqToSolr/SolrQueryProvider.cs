@@ -1,7 +1,7 @@
-﻿using SS.LinqToSolr.Model;
+﻿using SS.LinqToSolr.Models;
 using System.Linq.Expressions;
 
-namespace SS.LinqToSolr.Test
+namespace SS.LinqToSolr
 {
     public class SolrQueryProvider<T> : QueryProvider where T : Document
     {

@@ -1,18 +1,15 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SS.LinqToSolr.Extensions;
-using System;
-using System.Configuration;
+using SS.LinqToSolr.Test.Models;
 using System.Linq;
 
 namespace SS.LinqToSolr.Test
 {
     [TestClass]
-    public class MethodExtensionsTest : IDisposable
+    public class MethodExtensionsTest : BaseSolrTest
     {
-        private SolrService _api;
-        public MethodExtensionsTest()
+        public MethodExtensionsTest() : base("sitecore_signals")
         {
-            _api = new SolrService(ConfigurationManager.AppSettings["Solr.Url"], "sitecore_signals");
         }
 
         [TestMethod]
@@ -40,7 +37,7 @@ namespace SS.LinqToSolr.Test
         [TestMethod]
         public void BoostQuery()
         {
-            var boost1 = _api.GetContext<TestDocument>().Where(x => (x.Title== "test").Boost(2)).ToString();
+            var boost1 = _api.GetContext<TestDocument>().Where(x => (x.Title == "test").Boost(2)).ToString();
             Assert.AreEqual(boost1, "q=((title_s:test)^2)");
             var boost2 = _api.GetContext<TestDocument>().Where(x => (x.Title == "test").Boost(2.5f) && (x.Type == "type 1").Boost(2)).ToString();
             Assert.AreEqual(boost2, "q=((title_s:test)^2.5 AND (_type:\"type 1\")^2)");
@@ -54,26 +51,5 @@ namespace SS.LinqToSolr.Test
             var constantScore2 = _api.GetContext<TestDocument>().Where(x => (x.Title == "test" || x.Title == "test1").ConstantScore(1.5f)).ToString();
             Assert.AreEqual(constantScore2, "q=((title_s:test OR title_s:test1)^=1.5)");
         }
-
-        #region Disposing
-        private bool _disposed;
-
-        public void Dispose()
-        {
-            Dispose(true);
-        }
-        protected virtual void Dispose(bool disposing)
-        {
-            if (_disposed)
-                return;
-
-            if (disposing)
-            {
-                _api.Dispose();
-            }
-
-            _disposed = true;
-        }
-        #endregion
     }
 }

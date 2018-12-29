@@ -1,12 +1,12 @@
-﻿using SS.LinqToSolr.Model;
-using SS.LinqToSolr.Model.SearchResponse;
+﻿using SS.LinqToSolr.Models;
+using SS.LinqToSolr.Models.SearchResponse;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 
-namespace SS.LinqToSolr.Test
+namespace SS.LinqToSolr
 {
     public interface ISolrService
     {

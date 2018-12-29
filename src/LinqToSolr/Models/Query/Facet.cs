@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace SS.LinqToSolr.Model.Query
+namespace SS.LinqToSolr.Models.Query
 {
     public class Facet
     {

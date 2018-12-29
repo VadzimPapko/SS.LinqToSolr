@@ -1,4 +1,4 @@
-﻿namespace SS.LinqToSolr.Model.SearchResponse
+﻿namespace SS.LinqToSolr.Models.SearchResponse
 {
     public class FacetValue: IFacet
     {

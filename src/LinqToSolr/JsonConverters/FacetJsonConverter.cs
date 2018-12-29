@@ -1,5 +1,5 @@
-﻿using SS.LinqToSolr.Model;
-using SS.LinqToSolr.Model.SearchResponse;
+﻿using SS.LinqToSolr.Models;
+using SS.LinqToSolr.Models.SearchResponse;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;

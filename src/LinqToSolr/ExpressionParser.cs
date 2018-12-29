@@ -1,5 +1,5 @@
 ﻿using SS.LinqToSolr.Extensions;
-using SS.LinqToSolr.Model.Query;
+using SS.LinqToSolr.Models.Query;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;

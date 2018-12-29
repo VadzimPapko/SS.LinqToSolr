@@ -1,4 +1,4 @@
-﻿using SS.LinqToSolr.Model;
+﻿using SS.LinqToSolr.Models;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SS.LinqToSolr.Test
+namespace SS.LinqToSolr.Test.Models
 {
     class TestDocument: Document
     {

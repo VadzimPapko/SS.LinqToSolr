@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace SS.LinqToSolr.Model.SearchResponse
+namespace SS.LinqToSolr.Models.SearchResponse
 {
     public class PivotFacetValue : IFacet
     {

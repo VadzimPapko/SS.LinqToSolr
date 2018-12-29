@@ -1,4 +1,4 @@
-﻿namespace SS.LinqToSolr.Model.Query
+﻿namespace SS.LinqToSolr.Models.Query
 {
     public class OrderBy
     {
