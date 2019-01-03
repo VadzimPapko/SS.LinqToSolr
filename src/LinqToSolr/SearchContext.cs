@@ -7,23 +7,18 @@ using System.Net.Http;
 
 namespace SS.LinqToSolr
 {
-    public class SearchContext : ISolrService, IDisposable
+    public class SearchContext : ISearchContext, IDisposable
     {
         public string LastQuery { get; private set; }
+        public string Handler { get; set; } = "select";
+        public string Core { get; set; }
 
         private readonly HttpClient _client;
-        private readonly string _core;
-        private readonly string _handler;
 
-        public SearchContext(string url, string core, string handler = "select")
+        public SearchContext(HttpClient client, string core)
         {
-            _core = core;
-            _handler = handler;
-
-            _client = new HttpClient
-            {
-                BaseAddress = new Uri(url)
-            };
+            Core = core;
+            _client = client;
         }
 
         public IQueryable<T> GetQueryable<T>() where T : Document
@@ -35,24 +30,17 @@ namespace SS.LinqToSolr
         public Response<T> Search<T>(string query) where T : Document
         {
             LastQuery = query;
-            try
-            {
-                query = query + "&wt=json";
-                var response = _client.GetAsync($"{_core}/{_handler}?{query}").Result;
 
-                var body = response.Content.ReadAsStringAsync().Result;
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
-                {
-                    var result = JsonConvert.DeserializeObject<Response<T>>(body);
-                    return result;
-                }
+            var response = _client.GetAsync($"{Core}/{Handler}?{query}&wt=json").Result;
 
-                return null;
-            }
-            catch (Exception exp)
+            var body = response.Content.ReadAsStringAsync().Result;
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
-                return null;
+                var result = JsonConvert.DeserializeObject<Response<T>>(body);
+                return result;
             }
+
+            return null;
         }
 
 

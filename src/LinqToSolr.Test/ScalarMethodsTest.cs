@@ -59,27 +59,27 @@ namespace SS.LinqToSolr.Test
         //    Assert.AreEqual(last2.Title, "test");
         //}
 
-        [TestMethod]
-        public void Single()
-        {
-            var single = _api.GetQueryable<TestDocument>().Where(x => x.Title == "smth").Single();
-            Assert.AreEqual(_api.LastQuery, "q=(title_s:smth)&rows=1");
-            Assert.AreEqual(single.Title, "test");
-            var single2 = _api.GetQueryable<TestDocument>().Last(x => x.Title == "smth");
-            Assert.AreEqual(_api.LastQuery, "q=(title_s:smth)&rows=1");
-            Assert.AreEqual(single2.Title, "test");
-        }
+        //[TestMethod]
+        //public void Single()
+        //{
+        //    var single = _api.GetQueryable<TestDocument>().Where(x => x.Title == "smth").Single();
+        //    Assert.AreEqual(_api.LastQuery, "q=(title_s:smth)&rows=1");
+        //    Assert.AreEqual(single.Title, "test");
+        //    var single2 = _api.GetQueryable<TestDocument>().Last(x => x.Title == "smth");
+        //    Assert.AreEqual(_api.LastQuery, "q=(title_s:smth)&rows=1");
+        //    Assert.AreEqual(single2.Title, "test");
+        //}
 
-        [TestMethod]
-        public void SingleOrDefault()
-        {
-            var single = _api.GetQueryable<TestDocument>().Where(x => x.Title == "smth").SingleOrDefault();
-            Assert.AreEqual(_api.LastQuery, "q=(title_s:smth)&rows=1");
-            Assert.AreEqual(single.Title, "test");
-            var single2 = _api.GetQueryable<TestDocument>().LastOrDefault(x => x.Title == "smth");
-            Assert.AreEqual(_api.LastQuery, "q=(title_s:smth)&rows=1");
-            Assert.AreEqual(single2.Title, "test");
-        }
+        //[TestMethod]
+        //public void SingleOrDefault()
+        //{
+        //    var single = _api.GetQueryable<TestDocument>().Where(x => x.Title == "smth").SingleOrDefault();
+        //    Assert.AreEqual(_api.LastQuery, "q=(title_s:smth)&rows=1");
+        //    Assert.AreEqual(single.Title, "test");
+        //    var single2 = _api.GetQueryable<TestDocument>().LastOrDefault(x => x.Title == "smth");
+        //    Assert.AreEqual(_api.LastQuery, "q=(title_s:smth)&rows=1");
+        //    Assert.AreEqual(single2.Title, "test");
+        //}
 
         [TestMethod]
         public void Count()

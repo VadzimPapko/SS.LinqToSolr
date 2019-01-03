@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Collections;
 
 namespace SS.LinqToSolr.ExpressionParsers
 {
@@ -19,107 +20,26 @@ namespace SS.LinqToSolr.ExpressionParsers
             _itemType = itemType;
         }
 
-        private string GetFieldName(MemberInfo member)
-        {
-            var dataMemberAttribute = member.GetCustomAttribute<JsonPropertyAttribute>();
-            var fieldName = !string.IsNullOrEmpty(dataMemberAttribute?.PropertyName)
-                ? dataMemberAttribute.PropertyName
-                : member.Name;
-
-            return fieldName;
-        }
-
-        public CompositeQuery Parse(Expression expression)
+        public virtual CompositeQuery Parse(Expression expression)
         {
             Visit(expression);
             return _compositeQuery;
         }
 
-        private static Expression StripQuotes(Expression e)
-        {
-            while (e.NodeType == ExpressionType.Quote)
-            {
-                e = ((UnaryExpression)e).Operand;
-            }
-            return e;
-        }
-
-        private object GetValue(Expression exp, MemberExpression parentExp = null)
-        {
-            object val = null;
-            if (parentExp != null && exp.NodeType == ExpressionType.MemberAccess && parentExp.NodeType == ExpressionType.MemberAccess)
-            {
-                val = GetValue(((MemberExpression)exp).Expression, (MemberExpression)exp);
-                if (parentExp.Member is FieldInfo)
-                {
-                    val = ((FieldInfo)parentExp.Member).GetValue(val);
-                }
-                else if (parentExp.Member is PropertyInfo)
-                {
-                    val = ((PropertyInfo)parentExp.Member).GetValue(val, null);
-                }
-            }
-            else if (exp.NodeType == ExpressionType.Call)
-            {
-                return GetValue(((MethodCallExpression)exp).Arguments[0]);
-            }
-            else if (exp.NodeType == ExpressionType.MemberAccess)
-            {
-                return GetValue(((MemberExpression)exp).Expression, (MemberExpression)exp);
-            }
-            else if (exp.NodeType == ExpressionType.Constant)
-            {
-                var cExp = (ConstantExpression)exp;
-                val = cExp.Value;
-                if (parentExp != null)
-                {
-                    if (parentExp.Member is PropertyInfo)
-                    {
-                        val = ((PropertyInfo)parentExp.Member).GetValue(val, null);
-                    }
-                    else if (parentExp.Member is FieldInfo)
-                    {
-                        val = ((FieldInfo)parentExp.Member).GetValue(val);
-                    }
-                }
-            }
-            else if (exp.NodeType == ExpressionType.Parameter)
-            {
-                val = GetFieldName(parentExp.Member);
-            }
-            else if (exp.NodeType == ExpressionType.ArrayIndex)
-            {
-                var be = (BinaryExpression)exp;
-                var left = GetValue(be.Left) as IList<object>;
-                var right = (int)((ConstantExpression)be.Right).Value;
-                var obj = left[right];
-
-                if (parentExp.Member is FieldInfo)
-                {
-                    val = ((FieldInfo)parentExp.Member).GetValue(obj);
-                }
-                else if (parentExp.Member is PropertyInfo)
-                {
-                    val = ((PropertyInfo)parentExp.Member).GetValue(obj, null);
-                }
-            }
-            return val;
-        }
-
-        private Expression VisitQueryableExtensionMethod(MethodCallExpression m)
+        protected virtual Expression VisitQueryableExtensionMethod(MethodCallExpression m)
         {
             switch (m.Method.Name)
             {
                 case "Filter":
-                    _compositeQuery.QueryFilters.Add(new ExpressionParser(_itemType).Parse(((LambdaExpression)StripQuotes(m.Arguments[1])).Body).Translate());
-                    Visit(StripQuotes(m.Arguments[0]));
+                    _compositeQuery.QueryFilters.Add(new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate());
+                    Visit(m.Arguments[0]);
                     return m;
                 case "Query":
-                    _compositeQuery.Query.Add(GetValue(m.Arguments[1]).ToString());
-                    Visit(StripQuotes(m.Arguments[0]));
+                    _compositeQuery.Query.Add(new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate());
+                    Visit(m.Arguments[0]);
                     return m;
                 case "Facet":
-                    var facetField = GetValue(((LambdaExpression)StripQuotes(m.Arguments[1])).Body).ToString();
+                    var facetField = new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate();
                     var facetValues = new List<string>();
                     var facetIsMultiFacet = false;
 
@@ -138,14 +58,14 @@ namespace SS.LinqToSolr.ExpressionParsers
                     if (!string.IsNullOrWhiteSpace(facetField))
                         _compositeQuery.Facets.Add(new Facet(facetField, facetValues, facetIsMultiFacet));
 
-                    Visit(StripQuotes(m.Arguments[0]));
+                    Visit(m.Arguments[0]);
                     return m;
                 case "PivotFacet":
-                    var facets = new ExpressionParser(_itemType).Parse(((LambdaExpression)StripQuotes(m.Arguments[1])).Body).Facets;
+                    var facets = new ExpressionParser(_itemType).Parse(m.Arguments[1]).Facets;
                     facets.Reverse();
                     _compositeQuery.PivotFacets.Add(new PivotFacet(facets.Select(x => x.Field).ToList()));
 
-                    Visit(StripQuotes(m.Arguments[0]));
+                    Visit(m.Arguments[0]);
                     return m;
 
                 default:
@@ -154,69 +74,53 @@ namespace SS.LinqToSolr.ExpressionParsers
             }
         }
 
-        private Expression VisitStringMethod(MethodCallExpression m)
+        protected virtual Expression VisitStringMethod(MethodCallExpression m)
         {
             switch (m.Method.Name)
             {
                 case "Format":
-                    var formater = GetValue(StripQuotes(m.Arguments[0])).ToString();
+                    var formater = new ExpressionParser(_itemType).Parse(m.Arguments[0]).Translate();
                     var objs = new object[m.Arguments.Count - 1];
                     for (var i = 1; i < m.Arguments.Count; i++)
                     {
-                        objs[i - 1] = GetValue(StripQuotes(m.Arguments[i])).ToString();
+                        objs[i - 1] = new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate();
                     }
                     var formated = string.Format(formater, objs);
                     _compositeQuery.Write(formated);
                     return m;
                 case "Contains":
-                    if (m.Method.DeclaringType == typeof(string))
-                    {
-                        Visit(Expression.Equal(m.Object, Expression.Constant($"*{GetValue(m)}*")));
-                    }
-                    else
-                        throw new NotSupportedException($"{m.Method.Name} support only string type");
+                    Visit(Expression.Equal(m.Object, Expression.Constant($"*{new ExpressionParser(_itemType).Parse(m.Arguments[0]).Translate()}*")));
                     return m;
                 case "StartsWith":
-                    if (m.Method.DeclaringType == typeof(string))
-                    {
-                        Visit(Expression.Equal(m.Object, Expression.Constant($"{GetValue(m)}*")));
-                    }
-                    else
-                        throw new NotSupportedException($"{m.Method.Name} support only string type");
+                    Visit(Expression.Equal(m.Object, Expression.Constant($"{new ExpressionParser(_itemType).Parse(m.Arguments[0]).Translate()}*")));
                     return m;
                 case "EndsWith":
-                    if (m.Method.DeclaringType == typeof(string))
-                    {
-                        Visit(Expression.Equal(m.Object, Expression.Constant($"*{GetValue(m)}")));
-                    }
-                    else
-                        throw new NotSupportedException($"{m.Method.Name} support only string type");
+                    Visit(Expression.Equal(m.Object, Expression.Constant($"*{new ExpressionParser(_itemType).Parse(m.Arguments[0]).Translate()}")));
                     return m;
                 default:
-                    throw new NotSupportedException(
-                        $"'{m.Method.Name}' is not supported");
+                    throw new NotSupportedException($"'{m.Method.Name}' is not supported");
             }
         }
 
-        private Expression VisitQueryableMethod(MethodCallExpression m)
+        protected virtual Expression VisitQueryableMethod(MethodCallExpression m)
         {
             switch (m.Method.Name)
             {
                 case "Where":
-                    _compositeQuery.Query.Add(new ExpressionParser(_itemType).Parse(((LambdaExpression)StripQuotes(m.Arguments[1])).Body).Translate());
-                    Visit(StripQuotes(m.Arguments[0]));
+                    _compositeQuery.Query.Add(new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate());
+                    Visit(m.Arguments[0]);
                     return m;
                 case "Count":
                     if (m.Arguments.Count == 1)
                     {
-                        Visit(StripQuotes(m.Arguments[0]));
+                        Visit(m.Arguments[0]);
                     }
                     else if (m.Arguments.Count == 2)
                     {
-                        _compositeQuery.Query.Add(new ExpressionParser(_itemType).Parse(StripQuotes(m.Arguments[1])).Translate());
-                        Visit(StripQuotes(m.Arguments[0]));
+                        _compositeQuery.Query.Add(new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate());
+                        Visit(m.Arguments[0]);
                     }
-                    _compositeQuery.ScalarMethods.Add(m.Method);
+                    _compositeQuery.ScalarMethod = m.Method;
                     return m;
                 case "First":
                 case "FirstOrDefault":
@@ -226,22 +130,23 @@ namespace SS.LinqToSolr.ExpressionParsers
                 case "SingleOrDefault":
                     if (m.Arguments.Count == 1)
                     {
-                        Visit(StripQuotes(m.Arguments[0]));
+                        Visit(m.Arguments[0]);
                     }
-                    else if(m.Arguments.Count == 2)
+                    else if (m.Arguments.Count == 2)
                     {
-                        _compositeQuery.Query.Add(new ExpressionParser(_itemType).Parse(StripQuotes(m.Arguments[1])).Translate());
-                        Visit(StripQuotes(m.Arguments[0]));
+                        _compositeQuery.Query.Add(new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate());
+                        Visit(m.Arguments[0]);
                     }
-                    
+
                     _compositeQuery.Take = 1;
-                    _compositeQuery.ScalarMethods.Add(m.Method);
+                    _compositeQuery.ScalarMethod = m.Method;
                     return m;
                 case "OrderBy":
                 case "ThenBy":
                 case "OrderByDescending":
                 case "ThenByDescending":
-                    _compositeQuery.OrderByList.Add(new OrderBy(GetValue(((LambdaExpression)StripQuotes(m.Arguments[1])).Body).ToString(), m.Method.Name));
+                    var field = new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate();
+                    _compositeQuery.OrderByList.Add(new OrderBy(field, m.Method.Name));
                     Visit(m.Arguments[0]);
                     return m;
                 case "Take":
@@ -257,12 +162,12 @@ namespace SS.LinqToSolr.ExpressionParsers
             }
         }
 
-        private Expression VisitItemMethod(MethodCallExpression m)
+        protected virtual Expression VisitItemMethod(MethodCallExpression m)
         {
             switch (m.Method.Name)
             {
                 case "get_Item":
-                    _compositeQuery.Write(GetValue(StripQuotes(m.Arguments[0])).ToString());
+                    _compositeQuery.Write(new ExpressionParser(_itemType).Parse(m.Arguments[0]).Translate());
                     return m;
 
                 default:
@@ -270,47 +175,47 @@ namespace SS.LinqToSolr.ExpressionParsers
             }
         }
 
-        private Expression VisitExtensionMethod(MethodCallExpression m)
+        protected virtual Expression VisitExtensionMethod(MethodCallExpression m)
         {
             switch (m.Method.Name)
             {
                 case "Boost":
                     if (m.Arguments.Count == 2)
                     {
-                        var term = new ExpressionParser(_itemType).Parse(StripQuotes(m.Arguments[0])).Translate();
-                        var boost = GetValue(StripQuotes(m.Arguments[1]));
+                        var term = new ExpressionParser(_itemType).Parse(m.Arguments[0]).Translate();
+                        var boost = new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate();
                         _compositeQuery.Write($"{term.ToSolrGroup()}^{boost}");
                     }
                     return m;
                 case "ConstantScore":
                     if (m.Arguments.Count == 2)
                     {
-                        var term = new ExpressionParser(_itemType).Parse(StripQuotes(m.Arguments[0])).Translate();
-                        var score = GetValue(StripQuotes(m.Arguments[1]));
+                        var term = new ExpressionParser(_itemType).Parse(m.Arguments[0]).Translate();
+                        var score = new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate();
                         _compositeQuery.Write($"{term.ToSolrGroup()}^={score}");
                     }
                     return m;
                 case "Fuzzy":
                     if (m.Arguments.Count == 3)
                     {
-                        var field = GetValue(StripQuotes(m.Arguments[0]));
-                        var value = GetValue(StripQuotes(m.Arguments[1])).ToSearchValue();
-                        var distance = GetValue(StripQuotes(m.Arguments[2]));
+                        var field = new ExpressionParser(_itemType).Parse(m.Arguments[0]).Translate();
+                        var value = new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate().ToSearchValue();
+                        var distance = new ExpressionParser(_itemType).Parse(m.Arguments[2]).Translate();
                         _compositeQuery.Write($"{field}:{value}~{distance}");
                     }
                     else if (m.Arguments.Count == 2)
                     {
-                        var field = GetValue(StripQuotes(m.Arguments[0]));
-                        var value = GetValue(StripQuotes(m.Arguments[1])).ToSearchValue();
+                        var field = new ExpressionParser(_itemType).Parse(m.Arguments[0]).Translate();
+                        var value = new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate().ToSearchValue();
                         _compositeQuery.Write($"{field}:{value}~");
                     }
                     return m;
                 case "Proximity":
                     if (m.Arguments.Count == 3)
                     {
-                        var field = GetValue(StripQuotes(m.Arguments[0]));
-                        var value = GetValue(StripQuotes(m.Arguments[1])).ToSearchValue();
-                        var distance = GetValue(StripQuotes(m.Arguments[2]));
+                        var field = new ExpressionParser(_itemType).Parse(m.Arguments[0]).Translate();
+                        var value = new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate().ToSearchValue();
+                        var distance = new ExpressionParser(_itemType).Parse(m.Arguments[2]).Translate();
                         _compositeQuery.Write($"{field}:{value}~{distance}");
                     }
                     return m;
@@ -337,6 +242,15 @@ namespace SS.LinqToSolr.ExpressionParsers
 
         protected override Expression VisitBinary(BinaryExpression b)
         {
+            if (b.NodeType == ExpressionType.ArrayIndex)
+            {
+                var left = GetValue(b.Left) as IList<object>;
+                var right = (int)((ConstantExpression)b.Right).Value;
+                var obj = left[right];
+                Visit(Expression.Constant(obj));
+                return b;
+            }
+
             if (b.NodeType == ExpressionType.NotEqual)
             {
                 _compositeQuery.Write("-");
@@ -402,11 +316,20 @@ namespace SS.LinqToSolr.ExpressionParsers
             {
                 if (c.Type == typeof(string))
                 {
-                    var str = c.Value.ToString();
-                    _compositeQuery.Write(str.Contains(" ") ? $"\"{str}\"" : str);
+                    _compositeQuery.Write(c.Value.ToString());
                 }
-                if (c.Type == typeof(DateTime))
+                else if (c.Type == typeof(DateTime))
+                {
                     _compositeQuery.Write(((DateTime)c.Value).ToString("yyyy-MM-ddThh:mm:ss.fffZ"));
+                }
+                else if (c.Type == typeof(float))
+                {
+                    _compositeQuery.Write(((float)c.Value).ToString());
+                }
+                else if (c.Type == typeof(int))
+                {
+                    _compositeQuery.Write(((int)c.Value).ToString());
+                }
             }
             return c;
         }
@@ -428,6 +351,71 @@ namespace SS.LinqToSolr.ExpressionParsers
             }
 
             throw new NotSupportedException($"The member '{m.Member.Name}' is not supported");
+        }
+
+        protected virtual string GetFieldName(MemberInfo member)
+        {
+            var dataMemberAttribute = member.GetCustomAttribute<JsonPropertyAttribute>();
+            var fieldName = !string.IsNullOrEmpty(dataMemberAttribute?.PropertyName)
+                ? dataMemberAttribute.PropertyName
+                : member.Name;
+
+            return fieldName;
+        }
+
+        protected virtual object GetValue(Expression exp, MemberExpression parentExp = null)
+        {
+            object val = null;
+            if (parentExp != null && exp.NodeType == ExpressionType.MemberAccess && parentExp.NodeType == ExpressionType.MemberAccess)
+            {
+                val = GetValue(((MemberExpression)exp).Expression, (MemberExpression)exp);
+                val = GetMemberValue(parentExp, val);
+            }
+            else if (exp.NodeType == ExpressionType.Call)
+            {
+                return GetValue(((MethodCallExpression)exp).Arguments[0]);
+            }
+            else if (exp.NodeType == ExpressionType.MemberAccess)
+            {
+                return GetValue(((MemberExpression)exp).Expression, (MemberExpression)exp);
+            }
+            else if (exp.NodeType == ExpressionType.Constant)
+            {
+                var cExp = (ConstantExpression)exp;
+                val = cExp.Value;
+                val = GetMemberValue(parentExp, val);
+            }
+            else if (exp.NodeType == ExpressionType.Parameter)
+            {
+                val = GetFieldName(parentExp.Member);
+            }
+            else if (exp.NodeType == ExpressionType.ArrayIndex)
+            {
+                var be = (BinaryExpression)exp;
+                var left = GetValue(be.Left) as IList<object>;
+                var right = (int)((ConstantExpression)be.Right).Value;
+                var obj = left[right];
+                val = GetMemberValue(parentExp, obj);
+            }
+            return val;
+        }
+
+        protected virtual object GetMemberValue(MemberExpression m, object obj)
+        {
+            if (m != null)
+            {
+                object val = null;
+                if (m.Member is FieldInfo)
+                {
+                    val = ((FieldInfo)m.Member).GetValue(obj);
+                }
+                else if (m.Member is PropertyInfo)
+                {
+                    val = ((PropertyInfo)m.Member).GetValue(obj, null);
+                }
+                return val;
+            }
+            return obj;
         }
     }
 }

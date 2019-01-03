@@ -8,7 +8,10 @@ namespace SS.LinqToSolr.Test
         protected SearchContext _api;
         public BaseSolrTest(string core)
         {
-            _api = new SearchContext(ConfigurationManager.AppSettings["Solr.Url"], core);
+            _api = new SearchContext(new System.Net.Http.HttpClient
+            {
+                BaseAddress = new Uri(ConfigurationManager.AppSettings["Solr.Url"])
+            }, core);
         }
 
         #region Disposing

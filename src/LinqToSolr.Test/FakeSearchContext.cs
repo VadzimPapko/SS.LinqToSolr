@@ -7,7 +7,7 @@ using SS.LinqToSolr.Test.Models;
 
 namespace SS.LinqToSolr.Test
 {
-    public class FakeSearchContext : ISolrService
+    public class FakeSearchContext : ISearchContext
     {
         public string LastQuery { get; private set; }
 

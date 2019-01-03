@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace SS.LinqToSolr
 {
-    public interface ISolrService
+    public interface ISearchContext
     {
         string LastQuery { get; }
         Response<T> Search<T>(string query) where T : Document;

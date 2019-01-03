@@ -30,7 +30,7 @@ namespace SS.LinqToSolr.Test
         [TestMethod]
         public void Phrase()
         {
-            var whereEqualsQuery = _api.GetQueryable<TestDocument>().Where(x => x.Title == "test test").ToString();
+            var whereEqualsQuery = _api.GetQueryable<TestDocument>().Where(x => x.Title == "\"test test\"").ToString();
             Assert.AreEqual(whereEqualsQuery, "q=(title_s:\"test test\")");
         }
 

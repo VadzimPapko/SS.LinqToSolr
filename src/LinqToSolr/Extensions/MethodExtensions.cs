@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace SS.LinqToSolr.Extensions
+﻿namespace SS.LinqToSolr.Extensions
 {
     public static class MethodExtensions
     {
@@ -10,8 +8,6 @@ namespace SS.LinqToSolr.Extensions
         /// </summary>
         public static T Boost<T>(this T value, float boost)
         {
-            if (boost < 0)
-                throw new ArgumentException("boost can not be less than 0");
             return value;
         }
 
@@ -21,8 +17,6 @@ namespace SS.LinqToSolr.Extensions
         /// </summary>        
         public static T ConstantScore<T>(this T value, float score)
         {
-            if (score < 0)
-                throw new ArgumentException("boost can not be less than 0");
             return value;
         }
 
@@ -32,9 +26,6 @@ namespace SS.LinqToSolr.Extensions
         /// </summary>        
         public static bool Fuzzy(this string field, string word)
         {
-            if (word.IsPhrase())
-                throw new ArgumentException("string must be word");
-
             return false;
         }
 
@@ -46,22 +37,7 @@ namespace SS.LinqToSolr.Extensions
         {
             return false;
         }
-
-        /// <summary>
-        /// Solr’s standard query parser supports fuzzy searches based on the Damerau-Levenshtein Distance or Edit Distance algorithm.        
-        /// <para>An optional distance parameter specifies the maximum number of edits allowed, between 0 and 2, defaulting to 2</para>  
-        /// </summary>
-        public static string Fuzzy(this string word, float distance = 2)
-        {
-            if (word.IsPhrase())
-                throw new ArgumentException("string must be word");
-            if (distance > 2)
-                throw new ArgumentException("distance can not be more than 2");
-            if (distance < 0)
-                throw new ArgumentException("distance can not be less than 0");
-            return $"{word}~{(distance == 2 ? "" : distance.ToString())}";
-        }
-
+        
         /// <summary>
         /// A proximity search looks for terms that are within a specific distance from one another.
         /// <para>For example, to search for a "apache" and "jakarta" within 10 words of each other in a document, use the search:</para>
@@ -70,20 +46,6 @@ namespace SS.LinqToSolr.Extensions
         public static bool Proximity(this string field, string phrase, int distance)
         {
             return false;
-        }
-
-        /// <summary>
-        /// A proximity search looks for terms that are within a specific distance from one another.
-        /// <para>For example, to search for a "apache" and "jakarta" within 10 words of each other in a document, use the search:</para>
-        /// <para>"jakarta apache"~10</para>
-        /// </summary>
-        public static string Proximity(this string phrase, int distance)
-        {
-            if (!phrase.IsPhrase())
-                throw new ArgumentException("string must be phrase");
-            if (distance < 0)
-                throw new ArgumentException("distance can not be less than 0");
-            return $"{phrase.ToSearchValue()}~{distance}";
         }
 
         public static bool Wildcard(this string str, float comparison)

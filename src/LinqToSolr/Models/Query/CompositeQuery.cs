@@ -9,7 +9,6 @@ namespace SS.LinqToSolr.Models.Query
     public class CompositeQuery
     {
         private string _value = null;
-        public List<MethodInfo> ScalarMethods { get; set; } = new List<MethodInfo>();
         public List<string> Query { get; set; } = new List<string>();
         public List<string> QueryFilters { get; set; } = new List<string>();
         public List<Facet> Facets { get; set; } = new List<Facet>();
@@ -17,6 +16,8 @@ namespace SS.LinqToSolr.Models.Query
         public List<OrderBy> OrderByList { get; set; } = new List<OrderBy>();
         public int? Skip { get; set; }
         public int? Take { get; set; }
+        public MethodInfo ScalarMethod { get; set; }
+
         public void Write(string val)
         {
             _value += val;
@@ -81,6 +82,6 @@ namespace SS.LinqToSolr.Models.Query
                 sb.Append($"&rows={Take}");
 
             return sb.ToString();
-        }        
+        }
     }
 }

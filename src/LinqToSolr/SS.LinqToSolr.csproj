@@ -68,7 +68,7 @@
     <Compile Include="Common\QueryProvider.cs" />
     <Compile Include="ExpressionParsers\ExpressionParser.cs" />
     <Compile Include="SolrQueryProvider.cs" />
-    <Compile Include="ISolrService.cs" />
+    <Compile Include="ISearchContext.cs" />
     <Compile Include="SearchContext.cs" />
   </ItemGroup>
   <ItemGroup>

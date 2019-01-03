@@ -2,10 +2,8 @@
 using SS.LinqToSolr.Models;
 using SS.LinqToSolr.ExpressionParsers;
 using System.Linq.Expressions;
-using SS.LinqToSolr.Helpers;
 using SS.LinqToSolr.Models.Query;
 using System.Linq;
-using System.Collections.Generic;
 using System;
 using SS.LinqToSolr.Models.SearchResponse;
 
@@ -13,16 +11,15 @@ namespace SS.LinqToSolr
 {
     public class SolrQueryProvider<T> : QueryProvider where T : Document
     {
-        private readonly ISolrService _solrService;
+        private readonly ISearchContext _solrService;
 
-        public SolrQueryProvider(ISolrService solrService)
+        public SolrQueryProvider(ISearchContext solrService)
         {
             _solrService = solrService;
         }
 
         public override object Execute(Expression expression)
         {
-            var elementType = TypeSystem.GetElementType(expression.Type);
             var compositeQuery = Parse(expression);
             var query = compositeQuery.Translate();
             var response = _solrService.Search<T>(query);
@@ -34,22 +31,21 @@ namespace SS.LinqToSolr
             return Parse(expression).Translate();
         }
 
-        public Query<T> GetQueryable()
+        public virtual Query<T> GetQueryable()
         {
             return new Query<T>(this);
         }
-        private CompositeQuery Parse(Expression expression)
+        protected virtual CompositeQuery Parse(Expression expression)
         {
             return new ExpressionParser(typeof(T)).Parse(expression);
         }
 
-        private object ApplyScalarMethod(CompositeQuery compositeQuery, Response<T> response)
+        protected virtual object ApplyScalarMethod(CompositeQuery query, Response<T> response)
         {
             var documents = response.ResponseNode.Documents;
-            if (!compositeQuery.ScalarMethods.Any())
+            if (query.ScalarMethod == null)
                 return documents;
-            var method = compositeQuery.ScalarMethods.First().Name;
-            switch (method)
+            switch (query.ScalarMethod.Name)
             {
                 case "Count":
                     return response.ResponseNode.Found;
@@ -66,7 +62,7 @@ namespace SS.LinqToSolr
                 case "SingleOrDefault":
                     return documents.SingleOrDefault();
                 default:
-                    throw new NotSupportedException($"'{method}' is not supported");
+                    throw new NotSupportedException($"'{query.ScalarMethod.Name}' is not supported");
             }
         }
     }
