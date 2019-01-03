@@ -4,6 +4,8 @@ using Newtonsoft.Json;
 using System;
 using System.Linq;
 using System.Net.Http;
+using System.Web;
+using System.Collections.Generic;
 
 namespace SS.LinqToSolr
 {
@@ -29,9 +31,11 @@ namespace SS.LinqToSolr
 
         public Response<T> Search<T>(string query) where T : Document
         {
+            query = $"{query}&wt=json";
             LastQuery = query;
 
-            var response = _client.GetAsync($"{Core}/{Handler}?{query}&wt=json").Result;
+            var httpMessage = TranslateQueryToPostMessage(query);
+            var response = _client.PostAsync($"{Core}/{Handler}", httpMessage).Result;
 
             var body = response.Content.ReadAsStringAsync().Result;
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
@@ -41,6 +45,21 @@ namespace SS.LinqToSolr
             }
 
             return null;
+        }
+
+        private FormUrlEncodedContent TranslateQueryToPostMessage(string query)
+        {
+            var paramsList = new List<KeyValuePair<string, string>>();
+            var parameters = HttpUtility.ParseQueryString(query);
+
+            foreach (string key in parameters.Keys)
+            {
+                var values = parameters.GetValues(key);
+                if (values == null) continue;
+
+                paramsList.AddRange(values.Select(value => new KeyValuePair<string, string>(key, value)));
+            }
+            return new FormUrlEncodedContent(paramsList);
         }
 
 
