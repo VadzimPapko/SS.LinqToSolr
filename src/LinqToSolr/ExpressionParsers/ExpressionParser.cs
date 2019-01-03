@@ -30,6 +30,10 @@ namespace SS.LinqToSolr.ExpressionParsers
         {
             switch (m.Method.Name)
             {
+                case "GetResponse":
+                    _compositeQuery.ScalarMethod = m.Method;
+                    Visit(m.Arguments[0]);
+                    return m;
                 case "Filter":
                     _compositeQuery.QueryFilters.Add(new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate());
                     Visit(m.Arguments[0]);

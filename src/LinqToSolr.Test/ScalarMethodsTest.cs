@@ -3,6 +3,7 @@ using System.Linq;
 using System;
 using SS.LinqToSolr.Test.Models;
 using System.Configuration;
+using SS.LinqToSolr.Extensions;
 
 namespace SS.LinqToSolr.Test
 {
@@ -13,6 +14,13 @@ namespace SS.LinqToSolr.Test
         public ScalarMethodsTest()
         {
             _api = new FakeSearchContext();
+        }
+
+        [TestMethod]
+        public void GetRespose()
+        {
+            var response = _api.GetQueryable<TestDocument>().GetResponse();
+            Assert.IsNotNull(response);
         }
 
         [TestMethod]

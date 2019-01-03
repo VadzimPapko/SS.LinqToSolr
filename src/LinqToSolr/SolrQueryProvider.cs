@@ -47,6 +47,8 @@ namespace SS.LinqToSolr
                 return documents;
             switch (query.ScalarMethod.Name)
             {
+                case "GetResponse":
+                    return response;
                 case "Count":
                     return response.ResponseNode.Found;
                 case "First":

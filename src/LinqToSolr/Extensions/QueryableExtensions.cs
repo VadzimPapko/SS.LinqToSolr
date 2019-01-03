@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SS.LinqToSolr.Models.SearchResponse;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -8,20 +9,20 @@ namespace SS.LinqToSolr.Extensions
 {
     public static class QueryableExtensions
     {
-        public static IQueryable<TSource> Page<TSource>(this IQueryable<TSource> source, int page, int pageSize)
+        public static IQueryable<T> Page<T>(this IQueryable<T> source, int page, int pageSize)
         {
             return Queryable.Take(Queryable.Skip(source, page * pageSize), pageSize);
         }
 
-        public static IQueryable<TSource> Facet<TSource, TKey>(this IQueryable<TSource> source,
-            Expression<Func<TSource, TKey>> keySelector)
+        public static IQueryable<T> Facet<T, TKey>(this IQueryable<T> source,
+            Expression<Func<T, TKey>> keySelector)
         {
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
             if (keySelector == null)
                 throw new ArgumentNullException(nameof(keySelector));
-            return source.Provider.CreateQuery<TSource>(Expression.Call(null,
-                ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(TSource), typeof(TKey)),
+            return source.Provider.CreateQuery<T>(Expression.Call(null,
+                ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(T), typeof(TKey)),
                 new Expression[2]
                 {
                     source.Expression,
@@ -29,15 +30,15 @@ namespace SS.LinqToSolr.Extensions
                 }));
         }
 
-        public static IQueryable<TSource> Facet<TSource, TKey>(this IQueryable<TSource> source,
-            Expression<Func<TSource, TKey>> keySelector, IEnumerable<object> selectedValues, bool isMultiFacet = false)
+        public static IQueryable<T> Facet<T, TKey>(this IQueryable<T> source,
+            Expression<Func<T, TKey>> keySelector, IEnumerable<object> selectedValues, bool isMultiFacet = false)
         {
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
             if (keySelector == null)
                 throw new ArgumentNullException(nameof(keySelector));
-            return source.Provider.CreateQuery<TSource>(Expression.Call(null,
-                ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(TSource), typeof(TKey)),
+            return source.Provider.CreateQuery<T>(Expression.Call(null,
+                ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(T), typeof(TKey)),
                 new Expression[4]
                 {
                     source.Expression,
@@ -47,14 +48,14 @@ namespace SS.LinqToSolr.Extensions
                 }));
         }
 
-        public static IQueryable<TSource> PivotFacet<TSource>(this IQueryable<TSource> source, Expression<Func<IQueryable<TSource>, IQueryable<TSource>>> keySelector)
+        public static IQueryable<T> PivotFacet<T>(this IQueryable<T> source, Expression<Func<IQueryable<T>, IQueryable<T>>> keySelector)
         {
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
             if (keySelector == null)
                 throw new ArgumentNullException(nameof(keySelector));
-            return source.Provider.CreateQuery<TSource>(Expression.Call(null,
-                ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(TSource)),
+            return source.Provider.CreateQuery<T>(Expression.Call(null,
+                ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(T)),
                 new Expression[2]
                 {
                     source.Expression,
@@ -62,29 +63,40 @@ namespace SS.LinqToSolr.Extensions
                 }));
         }
 
-        public static IQueryable<TSource> Filter<TSource>(this IQueryable<TSource> source, Expression<Func<TSource, bool>> predicate)
+        public static IQueryable<T> Filter<T>(this IQueryable<T> source, Expression<Func<T, bool>> predicate)
         {
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
             if (predicate == null)
                 throw new ArgumentNullException(nameof(predicate));
-            return source.Provider.CreateQuery<TSource>(Expression.Call(null, ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(TSource)), new Expression[2]
+            return source.Provider.CreateQuery<T>(Expression.Call(null, ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(T)), new Expression[2]
             {
                 source.Expression,
                 Expression.Quote( predicate)
             }));
         }
 
-        public static IQueryable<TSource> Query<TSource>(this IQueryable<TSource> source, string term)
+        public static IQueryable<T> Query<T>(this IQueryable<T> source, string term)
         {
             if (source == null)
                 throw new ArgumentNullException(nameof(source));
-     
-            return source.Provider.CreateQuery<TSource>(Expression.Call(null, ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(TSource)), new Expression[2]
+
+            return source.Provider.CreateQuery<T>(Expression.Call(null, ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(T)), new Expression[2]
             {
                 source.Expression,
                 Expression.Constant(term)
             }));
-        }        
+        }
+
+        public static Response<T> GetResponse<T>(this IQueryable<T> source)
+        {
+            if (source == null)
+                throw new ArgumentNullException(nameof(source));
+
+            return source.Provider.Execute<Response<T>>(Expression.Call(null, ((MethodInfo)MethodBase.GetCurrentMethod()).MakeGenericMethod(typeof(T)), new Expression[1]
+            {
+                source.Expression
+            }));
+        }
     }
 }
