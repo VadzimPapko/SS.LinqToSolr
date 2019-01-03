@@ -4,6 +4,6 @@ namespace SS.LinqToSolr.Translators
 {
     public interface IFieldTranslator
     {
-        string GetFieldName(MemberInfo member);
+        string Translate(MemberInfo member);
     }
 }

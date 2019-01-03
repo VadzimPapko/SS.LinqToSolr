@@ -363,7 +363,7 @@ namespace SS.LinqToSolr.ExpressionParsers
 
         protected virtual string GetFieldName(MemberInfo member)
         {
-            return _fieldTranslator.GetFieldName(member);
+            return _fieldTranslator.Translate(member);
         }
 
         protected virtual object GetValue(Expression exp, MemberExpression parentExp = null)

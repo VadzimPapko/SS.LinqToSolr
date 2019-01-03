@@ -1,6 +1,5 @@
 ﻿using SS.LinqToSolr.Models;
 using SS.LinqToSolr.Models.SearchResponse;
-using Newtonsoft.Json;
 using System;
 using System.Linq;
 using System.Net.Http;
@@ -18,8 +17,9 @@ namespace SS.LinqToSolr
 
         protected readonly HttpClient _client;
         protected IFieldTranslator _fieldTranslator;
+        protected IResposeTranslator _resposeTranslator;
 
-        public SearchContext(HttpClient client, string core, IFieldTranslator fieldTranslator = null)
+        public SearchContext(HttpClient client, string core, IFieldTranslator fieldTranslator = null, IResposeTranslator resposeTranslator = null)
         {
             Core = core;
             _client = client;
@@ -28,6 +28,11 @@ namespace SS.LinqToSolr
                 _fieldTranslator = new NewtonsoftJsonFieldTranslator();
             else
                 _fieldTranslator = fieldTranslator;
+
+            if (_resposeTranslator == null)
+                _resposeTranslator = new NewtonsoftJsonResposeTranslator();
+            else
+                _resposeTranslator = resposeTranslator;
         }
 
         public virtual IQueryable<T> GetQueryable<T>() where T : Document
@@ -46,8 +51,7 @@ namespace SS.LinqToSolr
             var body = response.Content.ReadAsStringAsync().Result;
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
-                var result = JsonConvert.DeserializeObject<Response<T>>(body);
-                return result;
+                return _resposeTranslator.Translate<T>(body);
             }
 
             return null;

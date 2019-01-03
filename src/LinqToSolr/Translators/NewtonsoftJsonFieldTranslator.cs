@@ -5,7 +5,7 @@ namespace SS.LinqToSolr.Translators
 {
     public class NewtonsoftJsonFieldTranslator : IFieldTranslator
     {
-        public string GetFieldName(MemberInfo member)
+        public string Translate(MemberInfo member)
         {
             var dataMemberAttribute = member.GetCustomAttribute<JsonPropertyAttribute>();
             var fieldName = !string.IsNullOrEmpty(dataMemberAttribute?.PropertyName)

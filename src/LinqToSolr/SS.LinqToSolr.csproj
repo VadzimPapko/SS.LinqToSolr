@@ -71,6 +71,8 @@
     <Compile Include="ISearchContext.cs" />
     <Compile Include="SearchContext.cs" />
     <Compile Include="Translators\IFieldTranslator.cs" />
+    <Compile Include="Translators\NewtonsoftJsonResposeTranslator.cs" />
+    <Compile Include="Translators\IResposeTranslator.cs" />
     <Compile Include="Translators\NewtonsoftJsonFieldTranslator.cs" />
   </ItemGroup>
   <ItemGroup>
