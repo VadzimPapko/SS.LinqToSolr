@@ -8,7 +8,7 @@ namespace SS.LinqToSolr.Models.Query
 {
     public class CompositeQuery
     {
-        private string _value = null;
+        protected string _value = null;
         public List<string> Query { get; set; } = new List<string>();
         public List<string> QueryFilters { get; set; } = new List<string>();
         public List<Facet> Facets { get; set; } = new List<Facet>();
@@ -23,7 +23,7 @@ namespace SS.LinqToSolr.Models.Query
             _value += val;
         }
 
-        public string Translate()
+        public virtual string Translate()
         {
             var sb = new StringBuilder();
             if (!string.IsNullOrWhiteSpace(_value))
@@ -56,7 +56,7 @@ namespace SS.LinqToSolr.Models.Query
                     sb.Append($"&facet.field={(x.IsMultiFacet && x.Values != null && x.Values.Any() ? $"{{!ex={x.Field}}}" : "")}{x.Field}");
                     if (x.Values != null && x.Values.Any())
                     {
-                        sb.Append($"&fq={(x.IsMultiFacet ? $"{{!tag={x.Field}}}" : "")}{x.Field}:{string.Join(" OR ", x.Values.Select(v => v.ToSearchValue())).ToSolrGroup()}");
+                        sb.Append($"&fq={(x.IsMultiFacet ? $"{{!tag={x.Field}}}" : "")}{x.Field}:{string.Join(" OR ", x.Values).ToSolrGroup()}");
                     }
                 });
             }

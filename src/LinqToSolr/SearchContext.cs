@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Web;
 using System.Collections.Generic;
+using SS.LinqToSolr.Translators;
 
 namespace SS.LinqToSolr
 {
@@ -15,21 +16,26 @@ namespace SS.LinqToSolr
         public string Handler { get; set; } = "select";
         public string Core { get; set; }
 
-        private readonly HttpClient _client;
+        protected readonly HttpClient _client;
+        protected IFieldTranslator _fieldTranslator;
 
-        public SearchContext(HttpClient client, string core)
+        public SearchContext(HttpClient client, string core, IFieldTranslator fieldTranslator = null)
         {
             Core = core;
             _client = client;
+
+            if (fieldTranslator == null)
+                _fieldTranslator = new NewtonsoftJsonFieldTranslator();
+            else
+                _fieldTranslator = fieldTranslator;
         }
 
-        public IQueryable<T> GetQueryable<T>() where T : Document
+        public virtual IQueryable<T> GetQueryable<T>() where T : Document
         {
-            return new SolrQueryProvider<T>(this).GetQueryable();
+            return new SolrQueryProvider<T>(this, _fieldTranslator).GetQueryable();
         }
 
-
-        public Response<T> Search<T>(string query) where T : Document
+        public virtual Response<T> Search<T>(string query) where T : Document
         {
             query = $"{query}&wt=json";
             LastQuery = query;
@@ -47,7 +53,7 @@ namespace SS.LinqToSolr
             return null;
         }
 
-        private FormUrlEncodedContent TranslateQueryToPostMessage(string query)
+        protected virtual FormUrlEncodedContent TranslateQueryToPostMessage(string query)
         {
             var paramsList = new List<KeyValuePair<string, string>>();
             var parameters = HttpUtility.ParseQueryString(query);
@@ -61,7 +67,6 @@ namespace SS.LinqToSolr
             }
             return new FormUrlEncodedContent(paramsList);
         }
-
 
         #region Disposing
         private bool _disposed;

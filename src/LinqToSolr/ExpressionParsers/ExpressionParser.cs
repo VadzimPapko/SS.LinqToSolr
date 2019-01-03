@@ -7,17 +7,21 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Collections;
+using SS.LinqToSolr.Translators;
 
 namespace SS.LinqToSolr.ExpressionParsers
 {
     public class ExpressionParser : ExpressionVisitor
     {
-        private Type _itemType { get; set; }
-        private CompositeQuery _compositeQuery = new CompositeQuery();
+        protected Type _itemType;
+        protected CompositeQuery _compositeQuery;
+        protected IFieldTranslator _fieldTranslator;
 
-        public ExpressionParser(Type itemType)
+        public ExpressionParser(Type itemType, IFieldTranslator fieldTranslator)
         {
             _itemType = itemType;
+            _compositeQuery = new CompositeQuery();
+            _fieldTranslator = fieldTranslator;
         }
 
         public virtual CompositeQuery Parse(Expression expression)
@@ -35,15 +39,15 @@ namespace SS.LinqToSolr.ExpressionParsers
                     Visit(m.Arguments[0]);
                     return m;
                 case "Filter":
-                    _compositeQuery.QueryFilters.Add(new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate());
+                    _compositeQuery.QueryFilters.Add(New().Parse(m.Arguments[1]).Translate());
                     Visit(m.Arguments[0]);
                     return m;
                 case "Query":
-                    _compositeQuery.Query.Add(new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate());
+                    _compositeQuery.Query.Add(New().Parse(m.Arguments[1]).Translate());
                     Visit(m.Arguments[0]);
                     return m;
                 case "Facet":
-                    var facetField = new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate();
+                    var facetField = New().Parse(m.Arguments[1]).Translate();
                     var facetValues = new List<string>();
                     var facetIsMultiFacet = false;
 
@@ -53,7 +57,7 @@ namespace SS.LinqToSolr.ExpressionParsers
                         var values = exp?.Value as IEnumerable<string>;
                         if (values == null)
                             values = exp?.Value as string[];
-                        facetValues = values?.ToList();
+                        facetValues = values?.Select(x => x.ToSearchValue()).ToList();
                     }
                     if (m.Arguments.Count >= 4)
                     {
@@ -65,7 +69,7 @@ namespace SS.LinqToSolr.ExpressionParsers
                     Visit(m.Arguments[0]);
                     return m;
                 case "PivotFacet":
-                    var facets = new ExpressionParser(_itemType).Parse(m.Arguments[1]).Facets;
+                    var facets = New().Parse(m.Arguments[1]).Facets;
                     facets.Reverse();
                     _compositeQuery.PivotFacets.Add(new PivotFacet(facets.Select(x => x.Field).ToList()));
 
@@ -83,23 +87,23 @@ namespace SS.LinqToSolr.ExpressionParsers
             switch (m.Method.Name)
             {
                 case "Format":
-                    var formater = new ExpressionParser(_itemType).Parse(m.Arguments[0]).Translate();
+                    var formater = New().Parse(m.Arguments[0]).Translate();
                     var objs = new object[m.Arguments.Count - 1];
                     for (var i = 1; i < m.Arguments.Count; i++)
                     {
-                        objs[i - 1] = new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate();
+                        objs[i - 1] = New().Parse(m.Arguments[1]).Translate();
                     }
                     var formated = string.Format(formater, objs);
                     _compositeQuery.Write(formated);
                     return m;
                 case "Contains":
-                    Visit(Expression.Equal(m.Object, Expression.Constant($"*{new ExpressionParser(_itemType).Parse(m.Arguments[0]).Translate()}*")));
+                    Visit(Expression.Equal(m.Object, Expression.Constant($"*{New().Parse(m.Arguments[0]).Translate()}*")));
                     return m;
                 case "StartsWith":
-                    Visit(Expression.Equal(m.Object, Expression.Constant($"{new ExpressionParser(_itemType).Parse(m.Arguments[0]).Translate()}*")));
+                    Visit(Expression.Equal(m.Object, Expression.Constant($"{New().Parse(m.Arguments[0]).Translate()}*")));
                     return m;
                 case "EndsWith":
-                    Visit(Expression.Equal(m.Object, Expression.Constant($"*{new ExpressionParser(_itemType).Parse(m.Arguments[0]).Translate()}")));
+                    Visit(Expression.Equal(m.Object, Expression.Constant($"*{New().Parse(m.Arguments[0]).Translate()}")));
                     return m;
                 default:
                     throw new NotSupportedException($"'{m.Method.Name}' is not supported");
@@ -111,7 +115,7 @@ namespace SS.LinqToSolr.ExpressionParsers
             switch (m.Method.Name)
             {
                 case "Where":
-                    _compositeQuery.Query.Add(new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate());
+                    _compositeQuery.Query.Add(New().Parse(m.Arguments[1]).Translate());
                     Visit(m.Arguments[0]);
                     return m;
                 case "Count":
@@ -121,7 +125,7 @@ namespace SS.LinqToSolr.ExpressionParsers
                     }
                     else if (m.Arguments.Count == 2)
                     {
-                        _compositeQuery.Query.Add(new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate());
+                        _compositeQuery.Query.Add(New().Parse(m.Arguments[1]).Translate());
                         Visit(m.Arguments[0]);
                     }
                     _compositeQuery.ScalarMethod = m.Method;
@@ -138,7 +142,7 @@ namespace SS.LinqToSolr.ExpressionParsers
                     }
                     else if (m.Arguments.Count == 2)
                     {
-                        _compositeQuery.Query.Add(new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate());
+                        _compositeQuery.Query.Add(New().Parse(m.Arguments[1]).Translate());
                         Visit(m.Arguments[0]);
                     }
 
@@ -149,7 +153,7 @@ namespace SS.LinqToSolr.ExpressionParsers
                 case "ThenBy":
                 case "OrderByDescending":
                 case "ThenByDescending":
-                    var field = new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate();
+                    var field = New().Parse(m.Arguments[1]).Translate();
                     _compositeQuery.OrderByList.Add(new OrderBy(field, m.Method.Name));
                     Visit(m.Arguments[0]);
                     return m;
@@ -171,7 +175,7 @@ namespace SS.LinqToSolr.ExpressionParsers
             switch (m.Method.Name)
             {
                 case "get_Item":
-                    _compositeQuery.Write(new ExpressionParser(_itemType).Parse(m.Arguments[0]).Translate());
+                    _compositeQuery.Write(New().Parse(m.Arguments[0]).Translate());
                     return m;
 
                 default:
@@ -186,40 +190,40 @@ namespace SS.LinqToSolr.ExpressionParsers
                 case "Boost":
                     if (m.Arguments.Count == 2)
                     {
-                        var term = new ExpressionParser(_itemType).Parse(m.Arguments[0]).Translate();
-                        var boost = new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate();
+                        var term = New().Parse(m.Arguments[0]).Translate();
+                        var boost = New().Parse(m.Arguments[1]).Translate();
                         _compositeQuery.Write($"{term.ToSolrGroup()}^{boost}");
                     }
                     return m;
                 case "ConstantScore":
                     if (m.Arguments.Count == 2)
                     {
-                        var term = new ExpressionParser(_itemType).Parse(m.Arguments[0]).Translate();
-                        var score = new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate();
+                        var term = New().Parse(m.Arguments[0]).Translate();
+                        var score = New().Parse(m.Arguments[1]).Translate();
                         _compositeQuery.Write($"{term.ToSolrGroup()}^={score}");
                     }
                     return m;
                 case "Fuzzy":
                     if (m.Arguments.Count == 3)
                     {
-                        var field = new ExpressionParser(_itemType).Parse(m.Arguments[0]).Translate();
-                        var value = new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate().ToSearchValue();
-                        var distance = new ExpressionParser(_itemType).Parse(m.Arguments[2]).Translate();
+                        var field = New().Parse(m.Arguments[0]).Translate();
+                        var value = New().Parse(m.Arguments[1]).Translate().ToSearchValue();
+                        var distance = New().Parse(m.Arguments[2]).Translate();
                         _compositeQuery.Write($"{field}:{value}~{distance}");
                     }
                     else if (m.Arguments.Count == 2)
                     {
-                        var field = new ExpressionParser(_itemType).Parse(m.Arguments[0]).Translate();
-                        var value = new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate().ToSearchValue();
+                        var field = New().Parse(m.Arguments[0]).Translate();
+                        var value = New().Parse(m.Arguments[1]).Translate().ToSearchValue();
                         _compositeQuery.Write($"{field}:{value}~");
                     }
                     return m;
                 case "Proximity":
                     if (m.Arguments.Count == 3)
                     {
-                        var field = new ExpressionParser(_itemType).Parse(m.Arguments[0]).Translate();
-                        var value = new ExpressionParser(_itemType).Parse(m.Arguments[1]).Translate().ToSearchValue();
-                        var distance = new ExpressionParser(_itemType).Parse(m.Arguments[2]).Translate();
+                        var field = New().Parse(m.Arguments[0]).Translate();
+                        var value = New().Parse(m.Arguments[1]).Translate().ToSearchValue();
+                        var distance = New().Parse(m.Arguments[2]).Translate();
                         _compositeQuery.Write($"{field}:{value}~{distance}");
                     }
                     return m;
@@ -359,12 +363,7 @@ namespace SS.LinqToSolr.ExpressionParsers
 
         protected virtual string GetFieldName(MemberInfo member)
         {
-            var dataMemberAttribute = member.GetCustomAttribute<JsonPropertyAttribute>();
-            var fieldName = !string.IsNullOrEmpty(dataMemberAttribute?.PropertyName)
-                ? dataMemberAttribute.PropertyName
-                : member.Name;
-
-            return fieldName;
+            return _fieldTranslator.GetFieldName(member);
         }
 
         protected virtual object GetValue(Expression exp, MemberExpression parentExp = null)
@@ -420,6 +419,11 @@ namespace SS.LinqToSolr.ExpressionParsers
                 return val;
             }
             return obj;
+        }
+
+        protected virtual ExpressionParser New()
+        {
+            return new ExpressionParser(_itemType, _fieldTranslator);
         }
     }
 }

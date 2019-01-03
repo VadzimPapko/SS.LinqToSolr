@@ -6,16 +6,19 @@ using SS.LinqToSolr.Models.Query;
 using System.Linq;
 using System;
 using SS.LinqToSolr.Models.SearchResponse;
+using SS.LinqToSolr.Translators;
 
 namespace SS.LinqToSolr
 {
     public class SolrQueryProvider<T> : QueryProvider where T : Document
     {
-        private readonly ISearchContext _solrService;
+        protected ISearchContext _solrService;
+        protected IFieldTranslator _fieldTranslator;
 
-        public SolrQueryProvider(ISearchContext solrService)
+        public SolrQueryProvider(ISearchContext solrService, IFieldTranslator fieldTranslator)
         {
             _solrService = solrService;
+            _fieldTranslator = fieldTranslator;
         }
 
         public override object Execute(Expression expression)
@@ -37,7 +40,7 @@ namespace SS.LinqToSolr
         }
         protected virtual CompositeQuery Parse(Expression expression)
         {
-            return new ExpressionParser(typeof(T)).Parse(expression);
+            return new ExpressionParser(typeof(T), _fieldTranslator).Parse(expression);
         }
 
         protected virtual object ApplyScalarMethod(CompositeQuery query, Response<T> response)

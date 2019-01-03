@@ -70,6 +70,8 @@
     <Compile Include="SolrQueryProvider.cs" />
     <Compile Include="ISearchContext.cs" />
     <Compile Include="SearchContext.cs" />
+    <Compile Include="Translators\IFieldTranslator.cs" />
+    <Compile Include="Translators\NewtonsoftJsonFieldTranslator.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
