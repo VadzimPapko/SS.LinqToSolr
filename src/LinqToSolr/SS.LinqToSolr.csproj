@@ -45,7 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ExpressionParsers\DismaxExpressionParser.cs" />
+    <Compile Include="ExpressionParsers\NodeExpressionParser.cs" />
     <Compile Include="Extensions\FunctionQueriesExtensions.cs" />
     <Compile Include="Extensions\MethodExtensions.cs" />
     <Compile Include="Extensions\QueryableDismaxExtensions.cs" />
@@ -53,7 +53,6 @@
     <Compile Include="Helpers\TypeSystem.cs" />
     <Compile Include="JsonConverters\FacetJsonConverter.cs" />
     <Compile Include="JsonConverters\SpellJsonConverter.cs" />
-    <Compile Include="Models\Query\DismaxCompositeQuery.cs" />
     <Compile Include="Models\Query\CompositeQuery.cs" />
     <Compile Include="Models\Query\OrderBy.cs" />
     <Compile Include="Models\Query\PivotFacet.cs" />

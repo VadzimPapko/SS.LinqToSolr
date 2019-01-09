@@ -32,16 +32,25 @@ namespace SS.LinqToSolr.ExpressionParsers
 
         protected virtual Expression VisitQueryableDismaxExtensionMethod(MethodCallExpression m)
         {
-            if (m.Method.Name == "Dismax")
+            switch (m.Method.Name)
             {
-                var dismaxParser = new DismaxExpressionParser(_itemType, _fieldTranslator);
-                var query = dismaxParser.Parse(m.Arguments[1]).Translate();
-                _compositeQuery.DismaxQuery = query;
-                _compositeQuery.QueryParser = QueryParser.Dismax;
-                return m;
+                case "BoostQuery":
+                    _compositeQuery.BoostQuery.Add(New().Parse(m.Arguments[1]));
+                    Visit(m.Arguments[0]);
+                    return m;
+                case "DismaxQueryAlt":
+                    _compositeQuery.QueryAlt = New().Parse(m.Arguments[1]);
+                    Visit(m.Arguments[0]);
+                    return m;
+                case "EDismax":
+                    _compositeQuery.QueryParser = QueryParser.EDismax;
+                    return m;
+                case "Dismax":
+                    _compositeQuery.QueryParser = QueryParser.Dismax;
+                    return m;
+                default:
+                    throw new NotSupportedException($"'{m.Method.Name}' is not supported");
             }
-
-            throw new NotSupportedException($"'{m.Method.Name}' is not supported out of Dismax method");
         }
 
         protected virtual Expression VisitQueryableExtensionMethod(MethodCallExpression m)
@@ -53,15 +62,15 @@ namespace SS.LinqToSolr.ExpressionParsers
                     Visit(m.Arguments[0]);
                     return m;
                 case "Filter":
-                    _compositeQuery.QueryFilters.Add(New().Parse(m.Arguments[1]).Translate());
+                    _compositeQuery.QueryFilters.Add(New().Parse(m.Arguments[1]));
                     Visit(m.Arguments[0]);
                     return m;
                 case "Query":
-                    _compositeQuery.Query.Add(New().Parse(m.Arguments[1]).Translate());
+                    _compositeQuery.Query.Add(New().Parse(m.Arguments[1]));
                     Visit(m.Arguments[0]);
                     return m;
                 case "Facet":
-                    var facetField = New().Parse(m.Arguments[1]).Translate();
+                    var facetField = New().Parse(m.Arguments[1]);
                     var facetValues = new List<string>();
                     var facetIsMultiFacet = false;
 
@@ -83,7 +92,7 @@ namespace SS.LinqToSolr.ExpressionParsers
                     Visit(m.Arguments[0]);
                     return m;
                 case "PivotFacet":
-                    var facets = New().Parse(m.Arguments[1]).Facets;
+                    var facets = new ExpressionParser(_itemType, _fieldTranslator).Parse(m.Arguments[1]).Facets;
                     facets.Reverse();
                     _compositeQuery.PivotFacets.Add(new PivotFacet(facets.Select(x => x.Field).ToList()));
 
@@ -95,40 +104,12 @@ namespace SS.LinqToSolr.ExpressionParsers
             }
         }
 
-        protected virtual Expression VisitStringMethod(MethodCallExpression m)
-        {
-            switch (m.Method.Name)
-            {
-                case "Format":
-                    var formater = New().Parse(m.Arguments[0]).Translate();
-                    var objs = new object[m.Arguments.Count - 1];
-                    for (var i = 1; i < m.Arguments.Count; i++)
-                    {
-                        objs[i - 1] = New().Parse(m.Arguments[1]).Translate();
-                    }
-                    var formated = string.Format(formater, objs);
-                    _compositeQuery.Write(formated);
-                    return m;
-                case "Contains":
-                    Visit(Expression.Equal(m.Object, Expression.Constant($"*{New().Parse(m.Arguments[0]).Translate()}*")));
-                    return m;
-                case "StartsWith":
-                    Visit(Expression.Equal(m.Object, Expression.Constant($"{New().Parse(m.Arguments[0]).Translate()}*")));
-                    return m;
-                case "EndsWith":
-                    Visit(Expression.Equal(m.Object, Expression.Constant($"*{New().Parse(m.Arguments[0]).Translate()}")));
-                    return m;
-                default:
-                    throw new NotSupportedException($"'{m.Method.Name}' is not supported");
-            }
-        }
-
         protected virtual Expression VisitQueryableMethod(MethodCallExpression m)
         {
             switch (m.Method.Name)
             {
                 case "Where":
-                    _compositeQuery.Query.Add(New().Parse(m.Arguments[1]).Translate());
+                    _compositeQuery.Query.Add(New().Parse(m.Arguments[1]));
                     Visit(m.Arguments[0]);
                     return m;
                 case "Count":
@@ -138,7 +119,7 @@ namespace SS.LinqToSolr.ExpressionParsers
                     }
                     else if (m.Arguments.Count == 2)
                     {
-                        _compositeQuery.Query.Add(New().Parse(m.Arguments[1]).Translate());
+                        _compositeQuery.Query.Add(New().Parse(m.Arguments[1]));
                         Visit(m.Arguments[0]);
                     }
                     _compositeQuery.ScalarMethod = m.Method;
@@ -155,7 +136,7 @@ namespace SS.LinqToSolr.ExpressionParsers
                     }
                     else if (m.Arguments.Count == 2)
                     {
-                        _compositeQuery.Query.Add(New().Parse(m.Arguments[1]).Translate());
+                        _compositeQuery.Query.Add(New().Parse(m.Arguments[1]));
                         Visit(m.Arguments[0]);
                     }
 
@@ -166,7 +147,7 @@ namespace SS.LinqToSolr.ExpressionParsers
                 case "ThenBy":
                 case "OrderByDescending":
                 case "ThenByDescending":
-                    var field = New().Parse(m.Arguments[1]).Translate();
+                    var field = New().Parse(m.Arguments[1]);
                     _compositeQuery.OrderByList.Add(new OrderBy(field, m.Method.Name));
                     Visit(m.Arguments[0]);
                     return m;
@@ -183,68 +164,6 @@ namespace SS.LinqToSolr.ExpressionParsers
             }
         }
 
-        protected virtual Expression VisitItemMethod(MethodCallExpression m)
-        {
-            switch (m.Method.Name)
-            {
-                case "get_Item":
-                    _compositeQuery.Write(New().Parse(m.Arguments[0]).Translate());
-                    return m;
-
-                default:
-                    throw new NotSupportedException($"'{m.Method.Name}' is not supported");
-            }
-        }
-
-        protected virtual Expression VisitExtensionMethod(MethodCallExpression m)
-        {
-            switch (m.Method.Name)
-            {
-                case "Boost":
-                    if (m.Arguments.Count == 2)
-                    {
-                        var term = New().Parse(m.Arguments[0]).Translate();
-                        var boost = New().Parse(m.Arguments[1]).Translate();
-                        _compositeQuery.Write($"{term.ToSolrGroup()}^{boost}");
-                    }
-                    return m;
-                case "ConstantScore":
-                    if (m.Arguments.Count == 2)
-                    {
-                        var term = New().Parse(m.Arguments[0]).Translate();
-                        var score = New().Parse(m.Arguments[1]).Translate();
-                        _compositeQuery.Write($"{term.ToSolrGroup()}^={score}");
-                    }
-                    return m;
-                case "Fuzzy":
-                    if (m.Arguments.Count == 3)
-                    {
-                        var field = New().Parse(m.Arguments[0]).Translate();
-                        var value = New().Parse(m.Arguments[1]).Translate().ToSearchValue();
-                        var distance = New().Parse(m.Arguments[2]).Translate();
-                        _compositeQuery.Write($"{field}:{value}~{distance}");
-                    }
-                    else if (m.Arguments.Count == 2)
-                    {
-                        var field = New().Parse(m.Arguments[0]).Translate();
-                        var value = New().Parse(m.Arguments[1]).Translate().ToSearchValue();
-                        _compositeQuery.Write($"{field}:{value}~");
-                    }
-                    return m;
-                case "Proximity":
-                    if (m.Arguments.Count == 3)
-                    {
-                        var field = New().Parse(m.Arguments[0]).Translate();
-                        var value = New().Parse(m.Arguments[1]).Translate().ToSearchValue();
-                        var distance = New().Parse(m.Arguments[2]).Translate();
-                        _compositeQuery.Write($"{field}:{value}~{distance}");
-                    }
-                    return m;
-                default:
-                    throw new NotSupportedException($"'{m.Method.Name}' is not supported");
-            }
-        }
-
         protected override Expression VisitMethodCall(MethodCallExpression m)
         {
             if (m.Method.DeclaringType == typeof(Queryable))
@@ -253,127 +172,8 @@ namespace SS.LinqToSolr.ExpressionParsers
                 return VisitQueryableExtensionMethod(m);
             if (m.Method.DeclaringType == typeof(QueryableDismaxExtensions))
                 return VisitQueryableDismaxExtensionMethod(m);
-            if (m.Method.DeclaringType == typeof(string))
-                return VisitStringMethod(m);
-            if (m.Method.DeclaringType == _itemType || _itemType.IsSubclassOf(m.Method.DeclaringType) || m.Method.DeclaringType.IsInterface && _itemType.GetInterfaces().Any(x => x == m.Method.DeclaringType))
-                return VisitItemMethod(m);
-            if (m.Method.DeclaringType == typeof(MethodExtensions))
-                return VisitExtensionMethod(m);
 
             throw new NotSupportedException($"'{m.Method.Name}' is not supported");
-        }
-
-        protected override Expression VisitBinary(BinaryExpression b)
-        {
-            if (b.NodeType == ExpressionType.ArrayIndex)
-            {
-                var left = GetValue(b.Left) as IList<object>;
-                var right = (int)((ConstantExpression)b.Right).Value;
-                var obj = left[right];
-                Visit(Expression.Constant(obj));
-                return b;
-            }
-
-            if (b.NodeType == ExpressionType.NotEqual)
-            {
-                _compositeQuery.Write("-");
-            }
-
-            Visit(b.Left);
-
-            switch (b.NodeType)
-            {
-                case ExpressionType.And:
-                case ExpressionType.AndAlso:
-                    _compositeQuery.Write(" AND ");
-                    break;
-                case ExpressionType.Or:
-                case ExpressionType.OrElse:
-                    _compositeQuery.Write(" OR ");
-                    break;
-                case ExpressionType.Equal:
-                case ExpressionType.NotEqual:
-                    _compositeQuery.Write(":");
-                    break;
-                case ExpressionType.GreaterThanOrEqual:
-                    _compositeQuery.Write(":[");
-                    break;
-                case ExpressionType.LessThanOrEqual:
-                    _compositeQuery.Write(":[* TO ");
-                    break;
-                case ExpressionType.GreaterThan:
-                    _compositeQuery.Write(":{");
-                    break;
-                case ExpressionType.LessThan:
-                    _compositeQuery.Write(":[* TO ");
-                    break;
-                default:
-                    throw new NotSupportedException($"'{ b.Method.Name}' is not supported");
-            }
-
-            Visit(b.Right);
-
-            switch (b.NodeType)
-            {
-                case ExpressionType.GreaterThanOrEqual:
-                    _compositeQuery.Write(" TO *]");
-                    break;
-                case ExpressionType.LessThanOrEqual:
-                    _compositeQuery.Write("]");
-                    break;
-                case ExpressionType.GreaterThan:
-                    _compositeQuery.Write(" TO *]");
-                    break;
-                case ExpressionType.LessThan:
-                    _compositeQuery.Write("}");
-                    break;
-            }
-
-            return b;
-        }
-
-        protected override Expression VisitConstant(ConstantExpression c)
-        {
-            var q = c.Value as IQueryable;
-            if (q == null)
-            {
-                if (c.Type == typeof(string))
-                {
-                    _compositeQuery.Write(c.Value.ToString());
-                }
-                else if (c.Type == typeof(DateTime))
-                {
-                    _compositeQuery.Write(((DateTime)c.Value).ToString("yyyy-MM-ddThh:mm:ss.fffZ"));
-                }
-                else if (c.Type == typeof(float))
-                {
-                    _compositeQuery.Write(((float)c.Value).ToString());
-                }
-                else if (c.Type == typeof(int))
-                {
-                    _compositeQuery.Write(((int)c.Value).ToString());
-                }
-            }
-            return c;
-        }
-
-        protected override Expression VisitMember(MemberExpression m)
-        {
-            if (m.Expression.NodeType == ExpressionType.Parameter)
-            {
-                _compositeQuery.Write(GetFieldName(m.Member));
-                return m;
-            }
-            else if (m.Expression.NodeType == ExpressionType.MemberAccess || m.Expression.NodeType == ExpressionType.Constant || m.Expression.NodeType == ExpressionType.ArrayIndex)
-            {
-                if (m.Type == typeof(DateTime))
-                    _compositeQuery.Write(((DateTime)GetValue(m)).ToString("yyyy-MM-ddThh:mm:ss.fffZ"));
-                else
-                    _compositeQuery.Write(GetValue(m).ToString());
-                return m;
-            }
-
-            throw new NotSupportedException($"The member '{m.Member.Name}' is not supported");
         }
 
         protected virtual string GetFieldName(MemberInfo member)
@@ -436,9 +236,9 @@ namespace SS.LinqToSolr.ExpressionParsers
             return obj;
         }
 
-        protected virtual ExpressionParser New()
+        protected virtual NodeExpressionParser New()
         {
-            return new ExpressionParser(_itemType, _fieldTranslator);
+            return new NodeExpressionParser(_itemType, _fieldTranslator);
         }
     }
 }

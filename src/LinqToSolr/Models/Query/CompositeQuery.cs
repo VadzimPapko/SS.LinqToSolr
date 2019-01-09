@@ -8,7 +8,6 @@ namespace SS.LinqToSolr.Models.Query
 {
     public class CompositeQuery
     {
-        protected string _value = null;
         public List<string> Query { get; set; } = new List<string>();
         public List<string> QueryFilters { get; set; } = new List<string>();
         public List<Facet> Facets { get; set; } = new List<Facet>();
@@ -19,12 +18,9 @@ namespace SS.LinqToSolr.Models.Query
         public MethodInfo ScalarMethod { get; set; }
 
         public QueryParser QueryParser { get; set; } = QueryParser.Default;
-        public string DismaxQuery { get; set; }
 
-        public void Write(string val)
-        {
-            _value += val;
-        }
+        public string QueryAlt { get; set; }
+        public List<string> BoostQuery { get; set; } = new List<string>();
 
         public virtual string GetQueryValue()
         {
@@ -107,22 +103,26 @@ namespace SS.LinqToSolr.Models.Query
             }
             return sb.ToString();
         }
-
+        
         public virtual string Translate()
         {
             var sb = new StringBuilder();
-            if (!string.IsNullOrWhiteSpace(_value) && QueryParser == QueryParser.Default)
-                return _value;
-
+            
             sb.Append(TranslateQuery());
             sb.Append(TranslateQueryFilters());
             sb.Append(TranslateFacets());
             sb.Append(TranslateOrder());
             sb.Append(TranslatePager());
 
+            if (!string.IsNullOrWhiteSpace(QueryAlt))
+                sb.Append($"&q.alt={QueryAlt}");
+
+            if (BoostQuery.Any())
+                sb.Append($"&bq={string.Join($" ", BoostQuery)}");
+
             if (QueryParser == QueryParser.Dismax)
             {
-                sb.Append($"{DismaxQuery}&defType=dismax");
+                sb.Append($"&defType=dismax");
             }
 
             return sb.ToString();
