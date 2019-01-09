@@ -18,29 +18,39 @@ namespace SS.LinqToSolr.Models.Query
         public int? Take { get; set; }
         public MethodInfo ScalarMethod { get; set; }
 
+        public QueryParser QueryParser { get; set; } = QueryParser.Default;
+        public string DismaxQuery { get; set; }
+
         public void Write(string val)
         {
             _value += val;
         }
 
-        public virtual string Translate()
+        public virtual string GetQueryValue()
         {
             var sb = new StringBuilder();
-            if (!string.IsNullOrWhiteSpace(_value))
-                return _value;
-
             if (Query.Any())
             {
                 var falsePredicat = "( OR ";
                 var truePredicat = "( AND ";
                 var q = string.Join(" AND ", Query.Select(x => x.ToSolrGroup()));
-                sb.Append($"q={q.Replace(falsePredicat, "(").Replace(truePredicat, "(")}");
+                sb.Append(q.Replace(falsePredicat, "(").Replace(truePredicat, "("));
             }
-            else
+            else if (QueryParser == QueryParser.Default)
             {
-                sb.Append($"q=*:*");
+                sb.Append("*:*");
             }
+            return sb.ToString();
+        }
 
+        public virtual string TranslateQuery()
+        {
+            return $"q={GetQueryValue()}";
+        }
+
+        public virtual string TranslateFacets()
+        {
+            var sb = new StringBuilder();
             if (PivotFacets.Any())
             {
                 PivotFacets.ForEach(x =>
@@ -63,23 +73,57 @@ namespace SS.LinqToSolr.Models.Query
 
             if (PivotFacets.Any() || Facets.Any())
                 sb.Append($"&facet=on");
+            return sb.ToString();
+        }
 
-            if (QueryFilters.Any())
-            {
-                var fq = string.Join(" AND ", QueryFilters.Select(x => x.ToSolrGroup()));
-                sb.Append($"&fq={fq}");
-            }
+        public virtual string TranslatePager()
+        {
+            var sb = new StringBuilder();
+            if (Skip.HasValue)
+                sb.Append($"&start={Skip}");
+            if (Take.HasValue)
+                sb.Append($"&rows={Take}");
+            return sb.ToString();
+        }
 
+        public virtual string TranslateOrder()
+        {
+            var sb = new StringBuilder();
             if (OrderByList.Any())
             {
                 sb.Append($"&sort=");
                 sb.Append(string.Join(",", OrderByList.Select(x => x.Translate())));
             }
+            return sb.ToString();
+        }
 
-            if (Skip.HasValue)
-                sb.Append($"&start={Skip}");
-            if (Take.HasValue)
-                sb.Append($"&rows={Take}");
+        public virtual string TranslateQueryFilters()
+        {
+            var sb = new StringBuilder();
+            if (QueryFilters.Any())
+            {
+                var fq = string.Join(" AND ", QueryFilters.Select(x => x.ToSolrGroup()));
+                sb.Append($"&fq={fq}");
+            }
+            return sb.ToString();
+        }
+
+        public virtual string Translate()
+        {
+            var sb = new StringBuilder();
+            if (!string.IsNullOrWhiteSpace(_value) && QueryParser == QueryParser.Default)
+                return _value;
+
+            sb.Append(TranslateQuery());
+            sb.Append(TranslateQueryFilters());
+            sb.Append(TranslateFacets());
+            sb.Append(TranslateOrder());
+            sb.Append(TranslatePager());
+
+            if (QueryParser == QueryParser.Dismax)
+            {
+                sb.Append($"{DismaxQuery}&defType=dismax");
+            }
 
             return sb.ToString();
         }

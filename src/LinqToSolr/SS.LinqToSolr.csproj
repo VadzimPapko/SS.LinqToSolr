@@ -45,16 +45,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ExpressionParsers\DismaxExpressionParser.cs" />
+    <Compile Include="Extensions\FunctionQueriesExtensions.cs" />
     <Compile Include="Extensions\MethodExtensions.cs" />
+    <Compile Include="Extensions\QueryableDismaxExtensions.cs" />
     <Compile Include="Extensions\QueryableExtensions.cs" />
     <Compile Include="Helpers\TypeSystem.cs" />
     <Compile Include="JsonConverters\FacetJsonConverter.cs" />
     <Compile Include="JsonConverters\SpellJsonConverter.cs" />
+    <Compile Include="Models\Query\DismaxCompositeQuery.cs" />
     <Compile Include="Models\Query\CompositeQuery.cs" />
     <Compile Include="Models\Query\OrderBy.cs" />
     <Compile Include="Models\Query\PivotFacet.cs" />
     <Compile Include="Models\Query\Facet.cs" />
     <Compile Include="Models\Document.cs" />
+    <Compile Include="Models\Query\QueryParser.cs" />
     <Compile Include="Models\SearchResponse\Error.cs" />
     <Compile Include="Models\SearchResponse\IFacet.cs" />
     <Compile Include="Models\SearchResponse\PivotFacetValue.cs" />

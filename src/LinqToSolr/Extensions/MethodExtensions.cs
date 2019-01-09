@@ -2,6 +2,12 @@
 {
     public static class MethodExtensions
     {
+        public static T AddConstantQuery<T>(this T value, string query)
+        {
+            return value;
+        }
+
+
         /// <summary>
         /// Boosting allows you to control the relevance of a document by boosting its term
         /// <para>By default, the boost factor is 1. Although the boost factor must be positive, it can be less than 1 (for example, it could be 0.2)</para>

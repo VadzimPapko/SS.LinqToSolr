@@ -56,6 +56,7 @@
   <ItemGroup>
     <Compile Include="BaseSolrTest.cs" />
     <Compile Include="FakeSearchContext.cs" />
+    <Compile Include="QueryableDismaxExtensionsTest.cs" />
     <Compile Include="QueryableMethodsTest.cs" />
     <Compile Include="QueryableMethodExtensionsTest.cs" />
     <Compile Include="MethodExtensionsTest.cs" />

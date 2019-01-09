@@ -30,6 +30,20 @@ namespace SS.LinqToSolr.ExpressionParsers
             return _compositeQuery;
         }
 
+        protected virtual Expression VisitQueryableDismaxExtensionMethod(MethodCallExpression m)
+        {
+            if (m.Method.Name == "Dismax")
+            {
+                var dismaxParser = new DismaxExpressionParser(_itemType, _fieldTranslator);
+                var query = dismaxParser.Parse(m.Arguments[1]).Translate();
+                _compositeQuery.DismaxQuery = query;
+                _compositeQuery.QueryParser = QueryParser.Dismax;
+                return m;
+            }
+
+            throw new NotSupportedException($"'{m.Method.Name}' is not supported out of Dismax method");
+        }
+
         protected virtual Expression VisitQueryableExtensionMethod(MethodCallExpression m)
         {
             switch (m.Method.Name)
@@ -75,7 +89,6 @@ namespace SS.LinqToSolr.ExpressionParsers
 
                     Visit(m.Arguments[0]);
                     return m;
-
                 default:
                     throw new NotSupportedException(
                         $"'{m.Method.Name}' is not supported");
@@ -238,6 +251,8 @@ namespace SS.LinqToSolr.ExpressionParsers
                 return VisitQueryableMethod(m);
             if (m.Method.DeclaringType == typeof(QueryableExtensions))
                 return VisitQueryableExtensionMethod(m);
+            if (m.Method.DeclaringType == typeof(QueryableDismaxExtensions))
+                return VisitQueryableDismaxExtensionMethod(m);
             if (m.Method.DeclaringType == typeof(string))
                 return VisitStringMethod(m);
             if (m.Method.DeclaringType == _itemType || _itemType.IsSubclassOf(m.Method.DeclaringType) || m.Method.DeclaringType.IsInterface && _itemType.GetInterfaces().Any(x => x == m.Method.DeclaringType))
