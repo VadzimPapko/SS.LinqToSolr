@@ -6,7 +6,7 @@ namespace SS.LinqToSolr.Translators
 {
     public class NewtonsoftJsonResposeTranslator : IResposeTranslator
     {
-        public Response<T> Translate<T>(string responce) where T : Document
+        public Response<T> Translate<T>(string responce)
         {
             var result = JsonConvert.DeserializeObject<Response<T>>(responce);
             return result;

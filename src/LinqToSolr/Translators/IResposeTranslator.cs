@@ -5,6 +5,6 @@ namespace SS.LinqToSolr.Translators
 {
     public interface IResposeTranslator
     {
-        Response<T> Translate<T>(string responce) where T : Document;
+        Response<T> Translate<T>(string responce);
     }
 }

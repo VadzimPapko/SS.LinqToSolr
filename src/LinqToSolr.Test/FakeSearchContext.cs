@@ -12,12 +12,12 @@ namespace SS.LinqToSolr.Test
     {
         public string LastQuery { get; private set; }
 
-        public IQueryable<T> GetQueryable<T>() where T : Document
+        public IQueryable<T> GetQueryable<T>()
         {
             return new SolrQueryProvider<T>(this, new NewtonsoftJsonFieldTranslator()).GetQueryable();
         }
 
-        public Response<T> Search<T>(string query) where T : Document
+        public Response<T> Search<T>(string query)
         {
             LastQuery = query;
 

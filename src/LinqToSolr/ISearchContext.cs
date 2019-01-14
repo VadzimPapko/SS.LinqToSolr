@@ -7,7 +7,7 @@ namespace SS.LinqToSolr
     public interface ISearchContext
     {
         string LastQuery { get; }
-        Response<T> Search<T>(string query) where T : Document;
-        IQueryable<T> GetQueryable<T>() where T : Document;
+        Response<T> Search<T>(string query);
+        IQueryable<T> GetQueryable<T>();
     }
 }

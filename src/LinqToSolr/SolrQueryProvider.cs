@@ -10,7 +10,7 @@ using SS.LinqToSolr.Translators;
 
 namespace SS.LinqToSolr
 {
-    public class SolrQueryProvider<T> : QueryProvider where T : Document
+    public class SolrQueryProvider<T> : QueryProvider
     {
         protected ISearchContext _solrService;
         protected IFieldTranslator _fieldTranslator;

@@ -29,18 +29,18 @@ namespace SS.LinqToSolr
             else
                 _fieldTranslator = fieldTranslator;
 
-            if (_resposeTranslator == null)
+            if (resposeTranslator == null)
                 _resposeTranslator = new NewtonsoftJsonResposeTranslator();
             else
                 _resposeTranslator = resposeTranslator;
         }
 
-        public virtual IQueryable<T> GetQueryable<T>() where T : Document
+        public virtual IQueryable<T> GetQueryable<T>()
         {
             return new SolrQueryProvider<T>(this, _fieldTranslator).GetQueryable();
         }
 
-        public virtual Response<T> Search<T>(string query) where T : Document
+        public virtual Response<T> Search<T>(string query)
         {
             query = $"{query}&wt=json";
             LastQuery = query;
