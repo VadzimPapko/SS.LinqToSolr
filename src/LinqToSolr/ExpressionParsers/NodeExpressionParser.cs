@@ -26,8 +26,16 @@ namespace SS.LinqToSolr.ExpressionParsers
         public virtual string Parse(Expression expression)
         {
             Visit(expression);
+
+            var falsePredicat = " OR ";
+            if (_value.StartsWith(falsePredicat))
+                _value = _value.Substring(falsePredicat.Length);
+            var truePredicat = " AND ";
+            if (_value.StartsWith(truePredicat))
+                _value = _value.Substring(truePredicat.Length);
+
             return _value;
-        }        
+        }
 
         protected virtual Expression VisitStringMethod(MethodCallExpression m)
         {

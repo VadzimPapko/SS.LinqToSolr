@@ -114,14 +114,16 @@ namespace SS.LinqToSolr.Models.Query
             sb.Append(TranslateOrder());
             sb.Append(TranslatePager());
 
-            if (!string.IsNullOrWhiteSpace(QueryAlt))
-                sb.Append($"&q.alt={QueryAlt}");
-
-            if (BoostQuery.Any())
-                sb.Append($"&bq={string.Join($" ", BoostQuery)}");
-
             if (QueryParser == QueryParser.Dismax)
             {
+                if (!string.IsNullOrWhiteSpace(QueryAlt))
+                    sb.Append($"&q.alt={QueryAlt}");
+                else if(!Query.Any())
+                    sb.Append($"&q.alt=*:*");
+
+                if (BoostQuery.Any())
+                    sb.Append($"&bq={string.Join($" ", BoostQuery)}");
+
                 sb.Append($"&defType=dismax");
             }
 

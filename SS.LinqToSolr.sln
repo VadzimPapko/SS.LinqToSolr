@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS.LinqToSolr", "src\LinqTo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS.LinqToSolr.Test", "src\LinqToSolr.Test\SS.LinqToSolr.Test.csproj", "{7D3D7FBC-FBC9-4572-A45D-AAFF289F85B8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SS.LinqToSolr.Sitecore", "SS.LinqToSolr.Sitecore\SS.LinqToSolr.Sitecore.csproj", "{4118584C-DFD1-46B3-A8F7-CFF632F7E043}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{7D3D7FBC-FBC9-4572-A45D-AAFF289F85B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7D3D7FBC-FBC9-4572-A45D-AAFF289F85B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7D3D7FBC-FBC9-4572-A45D-AAFF289F85B8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4118584C-DFD1-46B3-A8F7-CFF632F7E043}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4118584C-DFD1-46B3-A8F7-CFF632F7E043}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4118584C-DFD1-46B3-A8F7-CFF632F7E043}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4118584C-DFD1-46B3-A8F7-CFF632F7E043}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

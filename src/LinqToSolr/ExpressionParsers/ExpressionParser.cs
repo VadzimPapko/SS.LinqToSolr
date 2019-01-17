@@ -1,12 +1,10 @@
 ﻿using SS.LinqToSolr.Extensions;
 using SS.LinqToSolr.Models.Query;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Collections;
 using SS.LinqToSolr.Translators;
 
 namespace SS.LinqToSolr.ExpressionParsers
@@ -62,45 +60,17 @@ namespace SS.LinqToSolr.ExpressionParsers
                     Visit(m.Arguments[0]);
                     return m;
                 case "Filter":
-                    _compositeQuery.QueryFilters.Add(New().Parse(m.Arguments[1]));
-                    Visit(m.Arguments[0]);
-                    return m;
+                    return VisitFacet(m);
                 case "Query":
                     _compositeQuery.Query.Add(New().Parse(m.Arguments[1]));
                     Visit(m.Arguments[0]);
                     return m;
                 case "Facet":
-                    var facetField = New().Parse(m.Arguments[1]);
-                    var facetValues = new List<string>();
-                    var facetIsMultiFacet = false;
-
-                    if (m.Arguments.Count >= 3)
-                    {
-                        var exp = m.Arguments[2] as ConstantExpression;
-                        var values = exp?.Value as IEnumerable<string>;
-                        if (values == null)
-                            values = exp?.Value as string[];
-                        facetValues = values?.Select(x => x.ToSearchValue()).ToList();
-                    }
-                    if (m.Arguments.Count >= 4)
-                    {
-                        facetIsMultiFacet = ((m.Arguments[3] as ConstantExpression)?.Value as bool?) ?? false;
-                    }
-                    if (!string.IsNullOrWhiteSpace(facetField))
-                        _compositeQuery.Facets.Add(new Facet(facetField, facetValues, facetIsMultiFacet));
-
-                    Visit(m.Arguments[0]);
-                    return m;
+                    return VisitFacet(m);
                 case "PivotFacet":
-                    var facets = new ExpressionParser(_itemType, _fieldTranslator).Parse(m.Arguments[1]).Facets;
-                    facets.Reverse();
-                    _compositeQuery.PivotFacets.Add(new PivotFacet(facets.Select(x => x.Field).ToList()));
-
-                    Visit(m.Arguments[0]);
-                    return m;
+                    return VisitPivotFacet(m);
                 default:
-                    throw new NotSupportedException(
-                        $"'{m.Method.Name}' is not supported");
+                    throw new NotSupportedException($"'{m.Method.Name}' is not supported");
             }
         }
 
@@ -239,6 +209,47 @@ namespace SS.LinqToSolr.ExpressionParsers
         protected virtual NodeExpressionParser New()
         {
             return new NodeExpressionParser(_itemType, _fieldTranslator);
+        }
+
+        protected virtual Expression VisitFilter(MethodCallExpression m)
+        {
+            _compositeQuery.QueryFilters.Add(New().Parse(m.Arguments[1]));
+            Visit(m.Arguments[0]);
+            return m;
+        }
+        protected virtual Expression VisitFacet(MethodCallExpression m)
+        {
+            var facetField = New().Parse(m.Arguments[1]);
+            var facetValues = new List<string>();
+            var facetIsMultiFacet = false;
+
+            if (m.Arguments.Count >= 3)
+            {
+                var exp = m.Arguments[2] as ConstantExpression;
+                var values = exp?.Value as IEnumerable<string>;
+                if (values == null)
+                    values = exp?.Value as string[];
+                facetValues = values?.Select(x => x.ToSearchValue()).ToList();
+            }
+            if (m.Arguments.Count >= 4)
+            {
+                facetIsMultiFacet = ((m.Arguments[3] as ConstantExpression)?.Value as bool?) ?? false;
+            }
+            if (!string.IsNullOrWhiteSpace(facetField))
+                _compositeQuery.Facets.Add(new Facet(facetField, facetValues, facetIsMultiFacet));
+
+            Visit(m.Arguments[0]);
+            return m;
+        }
+
+        protected virtual Expression VisitPivotFacet(MethodCallExpression m)
+        {
+            var facets = new ExpressionParser(_itemType, _fieldTranslator).Parse(m.Arguments[1]).Facets;
+            facets.Reverse();
+            _compositeQuery.PivotFacets.Add(new PivotFacet(facets.Select(x => x.Field).ToList()));
+
+            Visit(m.Arguments[0]);
+            return m;
         }
     }
 }
