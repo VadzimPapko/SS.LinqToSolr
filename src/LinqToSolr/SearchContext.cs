@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Web;
 using System.Collections.Generic;
 using SS.LinqToSolr.Translators;
+using SS.LinqToSolr.ExpressionParsers;
 
 namespace SS.LinqToSolr
 {
@@ -32,7 +33,7 @@ namespace SS.LinqToSolr
             if (resposeTranslator == null)
                 _resposeTranslator = new NewtonsoftJsonResposeTranslator();
             else
-                _resposeTranslator = resposeTranslator;
+                _resposeTranslator = resposeTranslator;            
         }
 
         public virtual IQueryable<T> GetQueryable<T>()

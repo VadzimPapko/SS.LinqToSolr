@@ -45,7 +45,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ExpressionParsers\NodeExpressionParser.cs" />
+    <Compile Include="ExpressionParsers\QueryableMethodBodyVisitor.cs" />
+    <Compile Include="ExpressionParsers\QueryableMethodVisitor.cs" />
+    <Compile Include="ExpressionParsers\ExpressionVisitor.cs" />
     <Compile Include="Extensions\FunctionQueriesExtensions.cs" />
     <Compile Include="Extensions\MethodExtensions.cs" />
     <Compile Include="Extensions\QueryableDismaxExtensions.cs" />
@@ -53,11 +55,14 @@
     <Compile Include="Helpers\TypeSystem.cs" />
     <Compile Include="JsonConverters\FacetJsonConverter.cs" />
     <Compile Include="JsonConverters\SpellJsonConverter.cs" />
-    <Compile Include="Models\Query\CompositeQuery.cs" />
-    <Compile Include="Models\Query\OrderBy.cs" />
-    <Compile Include="Models\Query\PivotFacet.cs" />
-    <Compile Include="Models\Query\Facet.cs" />
+    <Compile Include="Models\Query\BinaryNode.cs" />
+    <Compile Include="Models\Query\ConstantNode.cs" />
+    <Compile Include="Models\Query\FacetNode.cs" />
+    <Compile Include="Models\Query\MemberNode.cs" />
+    <Compile Include="Models\Query\MethodNode.cs" />
+    <Compile Include="Models\Query\ParserNode.cs" />
     <Compile Include="Models\Document.cs" />
+    <Compile Include="Models\Query\QueryNode.cs" />
     <Compile Include="Models\Query\QueryParser.cs" />
     <Compile Include="Models\SearchResponse\Error.cs" />
     <Compile Include="Models\SearchResponse\IFacet.cs" />
@@ -70,7 +75,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Common\Query.cs" />
     <Compile Include="Common\QueryProvider.cs" />
-    <Compile Include="ExpressionParsers\ExpressionParser.cs" />
     <Compile Include="SolrQueryProvider.cs" />
     <Compile Include="ISearchContext.cs" />
     <Compile Include="SearchContext.cs" />
@@ -78,6 +82,8 @@
     <Compile Include="Translators\NewtonsoftJsonResposeTranslator.cs" />
     <Compile Include="Translators\IResposeTranslator.cs" />
     <Compile Include="Translators\NewtonsoftJsonFieldTranslator.cs" />
+    <Compile Include="Translators\INodeTranslator.cs" />
+    <Compile Include="Translators\NodeTranslator.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

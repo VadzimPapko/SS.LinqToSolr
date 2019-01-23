@@ -11,7 +11,7 @@ using SS.LinqToSolr.Translators;
 
 namespace SS.LinqToSolr.ExpressionParsers
 {
-    public class NodeExpressionParser : ExpressionVisitor
+    public class NodeExpressionParser : System.Linq.Expressions.ExpressionVisitor
     {
         protected Type _itemType;
         protected string _value;

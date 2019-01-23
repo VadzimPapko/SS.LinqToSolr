@@ -9,7 +9,7 @@ using SS.LinqToSolr.Translators;
 
 namespace SS.LinqToSolr.ExpressionParsers
 {
-    public class ExpressionParser : ExpressionVisitor
+    public class ExpressionParser : System.Linq.Expressions.ExpressionVisitor
     {
         protected Type _itemType;
         protected CompositeQuery _compositeQuery;

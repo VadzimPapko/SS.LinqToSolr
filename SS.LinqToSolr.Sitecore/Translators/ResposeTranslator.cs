@@ -25,17 +25,17 @@ namespace SS.LinqToSolr.Sitecore.Translators
 
             public CustomContractResolver(Type type)
             {
-                var fieldTranslator = new FieldTranslator();
-                var props = type.GetProperties();
-                foreach (var prop in props)
-                {
-                    if (Attribute.IsDefined(prop, typeof(IndexFieldAttribute)))
-                    {
-                        var fieldName = fieldTranslator.Translate(prop);
-                        if (prop.Name != fieldName)
-                            PropertyMappings.Add(prop.Name, fieldName);
-                    }
-                }
+                //var fieldTranslator = new FieldTranslator();
+                //var props = type.GetProperties();
+                //foreach (var prop in props)
+                //{
+                //    if (Attribute.IsDefined(prop, typeof(IndexFieldAttribute)))
+                //    {
+                //        var fieldName = fieldTranslator.Translate(prop);
+                //        if (prop.Name != fieldName)
+                //            PropertyMappings.Add(prop.Name, fieldName);
+                //    }
+                //}
             }
 
             protected override string ResolvePropertyName(string propertyName)
