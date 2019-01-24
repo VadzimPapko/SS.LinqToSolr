@@ -31,16 +31,7 @@ namespace SS.LinqToSolr.Test
         {
             var orderByDescendingQuery = _api.GetQueryable<TestDocument>().OrderByDescending(x => x.Id).ThenByDescending(x => x.Title).ToString();
             Assert.AreEqual(orderByDescendingQuery, "q=*:*&sort=_uniqueid desc,title_s desc");
-        }
-
-        [TestMethod]
-        public void Count()
-        {
-            var count = _api.GetQueryable<TestDocument>().Count(x => x.Title == "test").ToString();
-            Assert.AreEqual(count, "q=title_s:test");
-            var count2 = _api.GetQueryable<TestDocument>().Count().ToString();
-            Assert.AreEqual(count, "q=*:*");
-        }
+        }        
 
         [TestMethod]
         public void Take()

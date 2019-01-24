@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace SS.LinqToSolr.ExpressionParsers
 {
@@ -29,7 +30,7 @@ namespace SS.LinqToSolr.ExpressionParsers
         }
         protected virtual QueryNode VisitStringMethod(MethodCallExpression m)
         {
-            var node = new MethodNode(m.Method.Name);
+            var node = new MethodNode(m.Method.Name, m.Type.DeclaringType);
             switch (m.Method.Name)
             {
                 case "Format":
@@ -62,7 +63,7 @@ namespace SS.LinqToSolr.ExpressionParsers
 
         protected virtual QueryNode VisitExtensionMethod(MethodCallExpression m)
         {
-            var node = new MethodNode(m.Method.Name);
+            var node = new MethodNode(m.Method.Name, m.Type.DeclaringType);
             switch (m.Method.Name)
             {
                 case "Boost":
@@ -152,9 +153,43 @@ namespace SS.LinqToSolr.ExpressionParsers
                 return new MemberNode(m.Member);
             }
             else if (m.Expression.NodeType == ExpressionType.Constant)
-                return Visit(m.Expression);
+            {
+                return new ConstantNode(m.Type, GetMemberValue(m, ((ConstantExpression)m.Expression).Value));
+            }
+            else if (m.Expression.NodeType == ExpressionType.MemberAccess)
+            {
+                if (m.Expression.NodeType == ExpressionType.MemberAccess)
+                {
+                    var childExp = (MemberExpression)m.Expression;
+                    if (childExp.Expression.NodeType == ExpressionType.Constant)
+                    {
+                        var val = GetMemberValue(childExp, ((ConstantExpression)childExp.Expression).Value);
+                        return new ConstantNode(m.Type, GetMemberValue(m, val));
+                    }
+
+                }
+            }
             throw new NotSupportedException($"The member '{m.Member.Name}' is not supported");
         }
+
+        protected virtual object GetMemberValue(MemberExpression m, object obj)
+        {
+            if (m != null)
+            {
+                object val = null;
+                if (m.Member is FieldInfo)
+                {
+                    val = ((FieldInfo)m.Member).GetValue(obj);
+                }
+                else if (m.Member is PropertyInfo)
+                {
+                    val = ((PropertyInfo)m.Member).GetValue(obj, null);
+                }
+                return val;
+            }
+            return obj;
+        }
+
         protected override QueryNode VisitNew(NewExpression exp)
         {
             throw new NotImplementedException();

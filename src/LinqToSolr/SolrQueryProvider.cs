@@ -33,18 +33,15 @@ namespace SS.LinqToSolr
         public override object Execute(Expression expression)
         {
             var nodes = Parse(expression);
-            var query = _nodeTranslator.Translate(nodes);
-            //var query = compositeQuery.Translate();
+            var query = _nodeTranslator.Translate(nodes, out string scalarMethodName);
             var response = _solrService.Search<T>(query);
-            //return ApplyScalarMethod(compositeQuery, response);
-            return null;
+            return ApplyScalarMethod(scalarMethodName, response);
         }
 
         public override string GetQueryText(Expression expression)
-        {
-            //return Parse(expression).Translate();
+        {   
             var nodes = Parse(expression);
-            return _nodeTranslator.Translate(nodes);
+            return _nodeTranslator.Translate(nodes, out string scalarMethodName);
         }
 
         public virtual Query<T> GetQueryable()
@@ -56,32 +53,32 @@ namespace SS.LinqToSolr
             return _visitor.Parse(expression);
         }
 
-        //protected virtual object ApplyScalarMethod(CompositeQuery query, Response<T> response)
-        //{
-        //    var documents = response.ResponseNode.Documents;
-        //    if (query.ScalarMethod == null)
-        //        return documents;
-        //    switch (query.ScalarMethod.Name)
-        //    {
-        //        case "GetResponse":
-        //            return response;
-        //        case "Count":
-        //            return response.ResponseNode.Found;
-        //        case "First":
-        //            return documents.First();
-        //        case "FirstOrDefault":
-        //            return documents.FirstOrDefault();
-        //        case "Last":
-        //            return documents.Last();
-        //        case "LastOrDefault":
-        //            return documents.LastOrDefault();
-        //        case "Single":
-        //            return documents.Single();
-        //        case "SingleOrDefault":
-        //            return documents.SingleOrDefault();
-        //        default:
-        //            throw new NotSupportedException($"'{query.ScalarMethod.Name}' is not supported");
-        //    }
-        //}
+        protected virtual object ApplyScalarMethod(string scalarMethodName, Response<T> response)
+        {
+            var documents = response.ResponseNode.Documents;
+            if (string.IsNullOrWhiteSpace(scalarMethodName))
+                return documents;
+            switch (scalarMethodName)
+            {
+                case "GetResponse":
+                    return response;
+                case "Count":
+                    return response.ResponseNode.Found;
+                case "First":
+                    return documents.First();
+                case "FirstOrDefault":
+                    return documents.FirstOrDefault();
+                case "Last":
+                    return documents.Last();
+                case "LastOrDefault":
+                    return documents.LastOrDefault();
+                case "Single":
+                    return documents.Single();
+                case "SingleOrDefault":
+                    return documents.SingleOrDefault();
+                default:
+                    throw new NotSupportedException($"'{scalarMethodName}' is not supported");
+            }
+        }
     }
 }

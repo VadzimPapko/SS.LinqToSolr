@@ -5,6 +5,6 @@ namespace SS.LinqToSolr.Translators
 {
     public interface INodeTranslator
     {
-        string Translate(List<MethodNode> methods);
+        string Translate(List<MethodNode> methods, out string scalarMethodName);
     }
 }

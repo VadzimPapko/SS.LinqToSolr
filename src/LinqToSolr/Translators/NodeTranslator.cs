@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using SS.LinqToSolr.Extensions;
 using SS.LinqToSolr.Models.Query;
 
 namespace SS.LinqToSolr.Translators
@@ -15,16 +16,52 @@ namespace SS.LinqToSolr.Translators
         {
             _fieldTranslator = fieldTranslator;
         }
+        //public virtual string TranslateFacets()
+        //{
+        //    var sb = new StringBuilder();
+        //    if (PivotFacets.Any())
+        //    {
+        //        PivotFacets.ForEach(x =>
+        //        {
+        //            sb.Append($"&facet.pivot={string.Join(",", x.Fields)}");
+        //        });
+        //    }
 
-        public string Translate(List<MethodNode> methods)
+        //    return sb.ToString();
+        //}
+
+        public string Translate(List<MethodNode> methods, out string scalarMethodName)
         {
+            scalarMethodName = null;
             var @params = new List<Tuple<string, string>>();
             foreach (var method in methods)
             {
                 switch (method.Name)
                 {
+                    case "Query":
                     case "Where":
                         @params.Add(new Tuple<string, string>("q", TranslateBody(method.Body)));
+                        break;
+                    case "Filter":
+                        @params.Add(new Tuple<string, string>("fq", TranslateBody(method.Body)));
+                        break;
+                    case "Facet":
+                        var facet = (FacetNode)method.Body;
+                        var facetFieldName = TranslateBody(facet.Field);
+                        if (facet.IsMultiFacet && facet.Values.Any())
+                        {
+                            @params.Add(new Tuple<string, string>("facet.field", $"{{!ex={facetFieldName}}}{facetFieldName}"));
+                            @params.Add(new Tuple<string, string>("fq", $"{{!tag={facetFieldName}}}{facetFieldName}:{string.Join(" OR ", facet.Values).ToSolrGroup()}"));
+                        }
+                        else
+                        {
+                            @params.Add(new Tuple<string, string>("facet.field", facetFieldName));
+                        }
+                        break;
+                    case "PivotFacet":
+                        var pivotFacet = (PivotFacetNode)method.Body;
+                        var fields = pivotFacet.Facets.Select(x => TranslateBody(((FacetNode)x.Body).Field));
+                        @params.Add(new Tuple<string, string>("facet.pivot", string.Join(",", fields)));
                         break;
                     case "OrderBy":
                     case "ThenBy":
@@ -45,8 +82,7 @@ namespace SS.LinqToSolr.Translators
                         {
                             @params.Add(new Tuple<string, string>("q", TranslateBody(method.Body)));
                         }
-                        
-                        //_compositeQuery.ScalarMethod = m.Method;
+                        scalarMethodName = method.Name;
                         break;
                     case "Dismax":
                         @params.Add(new Tuple<string, string>("defType", "dismax"));
@@ -55,6 +91,9 @@ namespace SS.LinqToSolr.Translators
                         throw new NotSupportedException($"'{method.Name}' is not supported");
                 }
             }
+
+            if (@params.Any(x => x.Item1 == "facet.field" || x.Item1 == "facet.pivot"))
+                @params.Add(new Tuple<string, string>("facet", "on"));
 
             if (!@params.Any(x => x.Item1 == "q"))
                 @params.Insert(0, new Tuple<string, string>("q", "*:*"));
@@ -66,6 +105,7 @@ namespace SS.LinqToSolr.Translators
                 switch (group.Key)
                 {
                     case "q":
+                    case "fq":
                         IEnumerable<string> result = null;
                         if (group.Count() > 1)
                             result = group.Select(x => $"({x.Item2})");

@@ -17,14 +17,14 @@ namespace SS.LinqToSolr.Test
         {
             var test = "test";
             var plainQuery = _api.GetQueryable<TestDocument>().Query(test).ToString();
-            Assert.AreEqual(plainQuery, "q=(test)");
+            Assert.AreEqual(plainQuery, "q=test");
         }
 
         [TestMethod]
         public void FilterEqualsQuery()
         {
             var filterEqualsQuery = _api.GetQueryable<TestDocument>().Filter(x => x.Title == "test").ToString();
-            Assert.AreEqual(filterEqualsQuery, "q=*:*&fq=(title_s:test)");
+            Assert.AreEqual(filterEqualsQuery, "q=*:*&fq=title_s:test");
         }
 
         [TestMethod]
@@ -57,7 +57,7 @@ namespace SS.LinqToSolr.Test
                 multifacetQuery = multifacetQuery.Facet(x => x[facet.Key], facet.Value, true);
             }
             var multifacetQueryStr = multifacetQuery.ToString();
-            Assert.AreEqual(multifacetQueryStr, "q=*:*&facet.field={!ex=Approver}Approver&fq={!tag=Approver}Approver:(LastName)&facet.field={!ex=Author}Author&fq={!tag=Author}Author:(test)&facet=on");
+            Assert.AreEqual(multifacetQueryStr, "q=*:*&facet.field={!ex=Author}Author&facet.field={!ex=Approver}Approver&fq=({!tag=Author}Author:(test)) AND ({!tag=Approver}Approver:(LastName))&facet=on");
         }
 
         [TestMethod]
