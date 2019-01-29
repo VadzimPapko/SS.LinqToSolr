@@ -154,17 +154,38 @@ namespace SS.LinqToSolr.Translators
             }
             else if (type == typeof(MethodNode))
             {
-                return TranslateBody(((MethodNode)node).Body);
+                return TranslateSubMethod((MethodNode)node);
             }
 
             throw new NotSupportedException($"'{type}' is not supported");
+        }
+
+        private string TranslateSubMethod(MethodNode node)
+        {
+            switch (node.Name)
+            {
+                case "Boost":
+                case "ConstantScore":
+                    return $"({TranslateBody(node.Body)}){TranslateBody(node.SubBody)}";
+                case "Fuzzy":
+                case "Proximity":
+                    return $"{TranslateBody(node.Body)}{TranslateBody(node.SubBody)}";
+                default:
+                    return TranslateBody(node.Body);
+            }
         }
 
         private string TranslateConstantNode(ConstantNode c)
         {
             if (c.Type == typeof(string))
             {
-                return c.Value.ToString();
+                var result = c.Value.ToString();
+                //for phrases
+                if (result.Contains(" "))
+                {
+                    return $"\"{result.Trim('"')}\"";
+                }
+                return result;
             }
             else if (c.Type == typeof(DateTime))
             {
@@ -189,7 +210,7 @@ namespace SS.LinqToSolr.Translators
 
         protected virtual string TranslateBinaryNode(BinaryNode b)
         {
-            //PredicateBuilder
+            //for ignore PredicateBuilder first node
             if (b.LeftNode is ConstantNode && b.RightNode is BinaryNode)
             {
                 return TranslateBinaryNode((BinaryNode)b.RightNode);
@@ -199,15 +220,6 @@ namespace SS.LinqToSolr.Translators
 
             var left = TranslateBody(b.LeftNode);
             var right = TranslateBody(b.RightNode);
-
-            if (b.Type == ExpressionType.ArrayIndex)
-            {
-                //var left = GetValue(b.Left) as IList<object>;
-                //var right = (int)((ConstantExpression)b.Right).Value;
-                //var obj = left[right];
-                //Visit(Expression.Constant(obj));
-                //return b;
-            }
 
             if (b.Type == ExpressionType.NotEqual)
             {

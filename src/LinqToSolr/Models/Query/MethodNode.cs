@@ -12,5 +12,6 @@ namespace SS.LinqToSolr.Models.Query
         }
         public Type DeclaringType { get; private set; }
         public QueryNode Body { get; set; }
+        public QueryNode SubBody { get; set; }
     }
 }

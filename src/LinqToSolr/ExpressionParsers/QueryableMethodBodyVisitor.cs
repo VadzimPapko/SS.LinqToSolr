@@ -64,44 +64,37 @@ namespace SS.LinqToSolr.ExpressionParsers
             {
                 case "Boost":
                     if (m.Arguments.Count == 2)
-                    {
-                        var term = Visit(m.Arguments[0]);
-                        var boost = Visit(m.Arguments[1]);
-                        //Write($"{term.ToSolrGroup()}^{boost}");
+                    {                       
+                        node.Body = Visit(m.Arguments[0]);
+                        node.SubBody = new ConstantNode(typeof(string), $"^{((ConstantNode)Visit(m.Arguments[1])).Value}");
                     }
                     return node;
-                //case "ConstantScore":
-                //    if (m.Arguments.Count == 2)
-                //    {
-                //        var term = New().Parse(m.Arguments[0]);
-                //        var score = New().Parse(m.Arguments[1]);
-                //        Write($"{term.ToSolrGroup()}^={score}");
-                //    }
-                //    return m;
-                //case "Fuzzy":
-                //    if (m.Arguments.Count == 3)
-                //    {
-                //        var field = New().Parse(m.Arguments[0]);
-                //        var value = New().Parse(m.Arguments[1]).ToSearchValue();
-                //        var distance = New().Parse(m.Arguments[2]);
-                //        Write($"{field}:{value}~{distance}");
-                //    }
-                //    else if (m.Arguments.Count == 2)
-                //    {
-                //        var field = New().Parse(m.Arguments[0]);
-                //        var value = New().Parse(m.Arguments[1]).ToSearchValue();
-                //        Write($"{field}:{value}~");
-                //    }
-                //    return m;
-                //case "Proximity":
-                //    if (m.Arguments.Count == 3)
-                //    {
-                //        var field = New().Parse(m.Arguments[0]);
-                //        var value = New().Parse(m.Arguments[1]).ToSearchValue();
-                //        var distance = New().Parse(m.Arguments[2]);
-                //        Write($"{field}:{value}~{distance}");
-                //    }
-                //    return m;
+                case "ConstantScore":
+                    if (m.Arguments.Count == 2)
+                    {
+                        node.Body = Visit(m.Arguments[0]);
+                        node.SubBody = new ConstantNode(typeof(string), $"^={((ConstantNode)Visit(m.Arguments[1])).Value}");                        
+                    }
+                    return node;
+                case "Fuzzy":
+                    if (m.Arguments.Count == 3)
+                    {                        
+                        node.Body = Visit(Expression.Equal(m.Arguments[0], m.Arguments[1]));
+                        node.SubBody = new ConstantNode(typeof(string), $"~{((ConstantNode)Visit(m.Arguments[2])).Value}");
+                    }
+                    else if (m.Arguments.Count == 2)
+                    {
+                        node.Body = Visit(Expression.Equal(m.Arguments[0], m.Arguments[1]));
+                        node.SubBody = new ConstantNode(typeof(string), $"~");
+                    }
+                    return node;
+                case "Proximity":
+                    if (m.Arguments.Count == 3)
+                    {
+                        node.Body = Visit(Expression.Equal(m.Arguments[0], m.Arguments[1]));
+                        node.SubBody = new ConstantNode(typeof(string), $"~{((ConstantNode)Visit(m.Arguments[2])).Value}");
+                    }
+                    return node;
                 default:
                     throw new NotSupportedException($"'{m.Method.Name}' is not supported");
             }
