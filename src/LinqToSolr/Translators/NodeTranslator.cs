@@ -33,7 +33,7 @@ namespace SS.LinqToSolr.Translators
         public string Translate(List<MethodNode> methods, out string scalarMethodName)
         {
             scalarMethodName = null;
-            var parser = "lucene";
+            var parser = QueryParser.Default;
             var @params = new List<Tuple<string, string>>();
             foreach (var method in methods)
             {
@@ -95,7 +95,7 @@ namespace SS.LinqToSolr.Translators
                         scalarMethodName = method.Name;
                         break;
                     case "Dismax":
-                        parser = "dismax";
+                        parser = QueryParser.Dismax;
                         break;
                     case "BoostQuery":
                         @params.Add(new Tuple<string, string>("bq", TranslateBody(method.Body)));
@@ -111,7 +111,7 @@ namespace SS.LinqToSolr.Translators
             if (@params.Any(x => x.Item1 == "facet.field" || x.Item1 == "facet.pivot"))
                 @params.Add(new Tuple<string, string>("facet", "on"));
 
-            if (parser == "dismax")
+            if (parser == QueryParser.Dismax)
             {
                 if (!@params.Any(x => x.Item1 == "q") && !@params.Any(x => x.Item1 == "q.alt"))
                 {
@@ -119,7 +119,7 @@ namespace SS.LinqToSolr.Translators
                 }
                 @params.Insert(0, new Tuple<string, string>("defType", "dismax"));
             }
-            else if (parser == "lucene" && !@params.Any(x => x.Item1 == "q"))
+            else if (parser == QueryParser.Default && !@params.Any(x => x.Item1 == "q"))
                 @params.Insert(0, new Tuple<string, string>("q", "*:*"));
 
             var queryParams = new List<string>();

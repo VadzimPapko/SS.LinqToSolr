@@ -60,7 +60,6 @@
     <Compile Include="Models\Query\FacetNode.cs" />
     <Compile Include="Models\Query\MemberNode.cs" />
     <Compile Include="Models\Query\MethodNode.cs" />
-    <Compile Include="Models\Query\ParserNode.cs" />
     <Compile Include="Models\Document.cs" />
     <Compile Include="Models\Query\PivotFacetNode.cs" />
     <Compile Include="Models\Query\QueryNode.cs" />
