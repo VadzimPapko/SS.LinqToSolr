@@ -2,7 +2,7 @@
 
 namespace SS.LinqToSolr.Models.Query
 {
-    public class PivotFacetNode : QueryNode
+    public class PivotFacetNode : IQueryNode
     {
         public PivotFacetNode(List<MethodNode> facets)
         {

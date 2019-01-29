@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace SS.LinqToSolr.Models.Query
+﻿namespace SS.LinqToSolr.Models.Query
 {
-    public class QueryNode
+    public interface IQueryNode
     {
     }
 }

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
-using System.Threading.Tasks;
 using SS.LinqToSolr.Extensions;
 using SS.LinqToSolr.Models.Query;
 
@@ -15,20 +14,7 @@ namespace SS.LinqToSolr.Translators
         public NodeTranslator(IFieldTranslator fieldTranslator)
         {
             _fieldTranslator = fieldTranslator;
-        }
-        //public virtual string TranslateFacets()
-        //{
-        //    var sb = new StringBuilder();
-        //    if (PivotFacets.Any())
-        //    {
-        //        PivotFacets.ForEach(x =>
-        //        {
-        //            sb.Append($"&facet.pivot={string.Join(",", x.Fields)}");
-        //        });
-        //    }
-
-        //    return sb.ToString();
-        //}
+        }        
 
         public string Translate(List<MethodNode> methods, out string scalarMethodName)
         {
@@ -152,7 +138,7 @@ namespace SS.LinqToSolr.Translators
             return string.Join("&", queryParams);
         }
 
-        protected virtual string TranslateBody(QueryNode node)
+        protected virtual string TranslateBody(IQueryNode node)
         {
             var type = node.GetType();
             if (type == typeof(BinaryNode))

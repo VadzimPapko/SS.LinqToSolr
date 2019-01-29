@@ -2,7 +2,7 @@
 
 namespace SS.LinqToSolr.Models.Query
 {
-    public class ConstantNode : QueryNode
+    public class ConstantNode : IQueryNode
     {
         public Type Type { get; private set; }
         public object Value { get; private set; }

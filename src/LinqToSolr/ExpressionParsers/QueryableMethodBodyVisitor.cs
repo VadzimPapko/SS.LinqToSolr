@@ -17,7 +17,7 @@ namespace SS.LinqToSolr.ExpressionParsers
             _itemType = itemType;
         }
 
-        protected override QueryNode VisitMethodCall(MethodCallExpression m)
+        protected override IQueryNode VisitMethodCall(MethodCallExpression m)
         {
             if (m.Method.DeclaringType == typeof(string))
                 return VisitStringMethod(m);
@@ -28,7 +28,7 @@ namespace SS.LinqToSolr.ExpressionParsers
 
             throw new NotSupportedException($"{m.Method.DeclaringType} '{m.Method.Name}' is not supported");
         }
-        protected virtual QueryNode VisitStringMethod(MethodCallExpression m)
+        protected virtual IQueryNode VisitStringMethod(MethodCallExpression m)
         {
             var node = new MethodNode(m.Method.Name, m.Type.DeclaringType);
             switch (m.Method.Name)
@@ -57,7 +57,7 @@ namespace SS.LinqToSolr.ExpressionParsers
             }
         }
 
-        protected virtual QueryNode VisitExtensionMethod(MethodCallExpression m)
+        protected virtual IQueryNode VisitExtensionMethod(MethodCallExpression m)
         {
             var node = new MethodNode(m.Method.Name, m.Type.DeclaringType);
             switch (m.Method.Name)
@@ -100,7 +100,7 @@ namespace SS.LinqToSolr.ExpressionParsers
             }
         }
 
-        protected virtual QueryNode VisitItemMethod(MethodCallExpression m)
+        protected virtual IQueryNode VisitItemMethod(MethodCallExpression m)
         {
             switch (m.Method.Name)
             {
@@ -110,12 +110,12 @@ namespace SS.LinqToSolr.ExpressionParsers
                     throw new NotSupportedException($"'{m.Method.Name}' is not supported");
             }
         }
-        protected override QueryNode VisitBinary(BinaryExpression exp)
+        protected override IQueryNode VisitBinary(BinaryExpression exp)
         {
             return new BinaryNode(Visit(exp.Left), Visit(exp.Right), exp.NodeType);
         }
 
-        protected override QueryNode VisitConstant(ConstantExpression c)
+        protected override IQueryNode VisitConstant(ConstantExpression c)
         {
             var q = c.Value as IQueryable;
             if (q == null)
@@ -125,17 +125,17 @@ namespace SS.LinqToSolr.ExpressionParsers
             return null;
         }
 
-        protected override QueryNode VisitIndex(IndexExpression exp)
+        protected override IQueryNode VisitIndex(IndexExpression exp)
         {
             throw new NotImplementedException();
         }
 
-        protected override QueryNode VisitInvocation(InvocationExpression node)
+        protected override IQueryNode VisitInvocation(InvocationExpression node)
         {
             return Visit(node.Expression);
         }
 
-        protected override QueryNode VisitMemberAccess(MemberExpression m)
+        protected override IQueryNode VisitMemberAccess(MemberExpression m)
         {
             if (m.Expression.NodeType == ExpressionType.Parameter)
             {
@@ -160,7 +160,7 @@ namespace SS.LinqToSolr.ExpressionParsers
             throw new NotSupportedException($"The member '{m.Expression.NodeType}' is not supported");
         }
 
-        protected virtual QueryNode VisitMemberAccess(MemberExpression m, MemberExpression parent)
+        protected virtual IQueryNode VisitMemberAccess(MemberExpression m, MemberExpression parent)
         {
             if (m.Expression.NodeType == ExpressionType.MemberAccess)
             {
@@ -193,22 +193,22 @@ namespace SS.LinqToSolr.ExpressionParsers
             return obj;
         }
 
-        protected override QueryNode VisitNew(NewExpression exp)
+        protected override IQueryNode VisitNew(NewExpression exp)
         {
             throw new NotImplementedException();
         }
 
-        protected override QueryNode VisitParameter(ParameterExpression p)
+        protected override IQueryNode VisitParameter(ParameterExpression p)
         {
             throw new NotSupportedException($"The '{p.NodeType}' is not supported");
         }
 
-        protected override QueryNode VisitUnary(UnaryExpression exp)
+        protected override IQueryNode VisitUnary(UnaryExpression exp)
         {
             throw new NotImplementedException();
         }
 
-        protected override QueryNode VisitQuote(Expression exp)
+        protected override IQueryNode VisitQuote(Expression exp)
         {
             while (exp.NodeType == ExpressionType.Quote)
             {
@@ -217,7 +217,7 @@ namespace SS.LinqToSolr.ExpressionParsers
             return Visit(exp);
         }
 
-        protected override QueryNode VisitLambda(LambdaExpression exp)
+        protected override IQueryNode VisitLambda(LambdaExpression exp)
         {
             return Visit(exp.Body);
         }

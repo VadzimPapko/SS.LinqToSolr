@@ -2,7 +2,7 @@
 
 namespace SS.LinqToSolr.Models.Query
 {
-    public class MemberNode : QueryNode
+    public class MemberNode : IQueryNode
     {
         public MemberInfo Member { get; private set; }
 

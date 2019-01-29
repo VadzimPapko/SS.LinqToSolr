@@ -6,12 +6,12 @@ namespace SS.LinqToSolr.ExpressionParsers
 {
     public abstract class ExpressionVisitor
     {
-        public virtual QueryNode Parse(Expression expression)
+        public virtual IQueryNode Parse(Expression expression)
         {
             return Visit(expression);
         }
 
-        protected virtual QueryNode Visit(Expression exp)
+        protected virtual IQueryNode Visit(Expression exp)
         {
             switch (exp.NodeType)
             {
@@ -55,25 +55,25 @@ namespace SS.LinqToSolr.ExpressionParsers
             }
         }
 
-        protected abstract QueryNode VisitLambda(LambdaExpression exp);
-        protected abstract QueryNode VisitQuote(Expression exp);
+        protected abstract IQueryNode VisitLambda(LambdaExpression exp);
+        protected abstract IQueryNode VisitQuote(Expression exp);
 
-        protected abstract QueryNode VisitIndex(IndexExpression exp);
+        protected abstract IQueryNode VisitIndex(IndexExpression exp);
 
-        protected abstract QueryNode VisitNew(NewExpression exp);
+        protected abstract IQueryNode VisitNew(NewExpression exp);
 
-        protected abstract QueryNode VisitParameter(ParameterExpression exp);
+        protected abstract IQueryNode VisitParameter(ParameterExpression exp);
 
-        protected abstract QueryNode VisitMemberAccess(MemberExpression exp);
+        protected abstract IQueryNode VisitMemberAccess(MemberExpression exp);
 
-        protected abstract QueryNode VisitInvocation(InvocationExpression exp);
+        protected abstract IQueryNode VisitInvocation(InvocationExpression exp);
 
-        protected abstract QueryNode VisitUnary(UnaryExpression exp);
+        protected abstract IQueryNode VisitUnary(UnaryExpression exp);
 
-        protected abstract QueryNode VisitConstant(ConstantExpression exp);
+        protected abstract IQueryNode VisitConstant(ConstantExpression exp);
 
-        protected abstract QueryNode VisitMethodCall(MethodCallExpression exp);
+        protected abstract IQueryNode VisitMethodCall(MethodCallExpression exp);
 
-        protected abstract QueryNode VisitBinary(BinaryExpression exp);
+        protected abstract IQueryNode VisitBinary(BinaryExpression exp);
     }
 }

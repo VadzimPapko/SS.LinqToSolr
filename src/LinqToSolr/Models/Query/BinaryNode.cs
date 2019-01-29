@@ -2,13 +2,13 @@
 
 namespace SS.LinqToSolr.Models.Query
 {
-    public class BinaryNode : QueryNode
+    public class BinaryNode : IQueryNode
     {
-        public QueryNode LeftNode { get; private set; }
-        public QueryNode RightNode { get; private set; }
+        public IQueryNode LeftNode { get; private set; }
+        public IQueryNode RightNode { get; private set; }
         public ExpressionType Type { get; private set; }
 
-        public BinaryNode(QueryNode leftNode, QueryNode rightNode, ExpressionType type)
+        public BinaryNode(IQueryNode leftNode, IQueryNode rightNode, ExpressionType type)
         {
             LeftNode = leftNode;
             RightNode = rightNode;

@@ -2,16 +2,16 @@
 
 namespace SS.LinqToSolr.Models.Query
 {
-    public class FacetNode : QueryNode
+    public class FacetNode : IQueryNode
     {
-        public FacetNode(QueryNode field, List<string> values, bool isMultiFacet)
+        public FacetNode(IQueryNode field, List<string> values, bool isMultiFacet)
         {
             Field = field;
             Values = values;
             IsMultiFacet = isMultiFacet;
         }
 
-        public QueryNode Field { get; private set; }
+        public IQueryNode Field { get; private set; }
         public List<string> Values { get; private set; }
         public bool IsMultiFacet { get; private set; }
     }
