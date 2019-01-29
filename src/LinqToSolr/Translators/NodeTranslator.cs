@@ -152,6 +152,10 @@ namespace SS.LinqToSolr.Translators
             {
                 return TranslateConstantNode((ConstantNode)node);
             }
+            else if (type == typeof(MethodNode))
+            {
+                return TranslateBody(((MethodNode)node).Body);
+            }
 
             throw new NotSupportedException($"'{type}' is not supported");
         }

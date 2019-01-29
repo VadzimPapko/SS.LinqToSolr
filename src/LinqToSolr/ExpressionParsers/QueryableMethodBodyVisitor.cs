@@ -38,23 +38,19 @@ namespace SS.LinqToSolr.ExpressionParsers
                     var objs = new object[m.Arguments.Count - 1];
                     for (var i = 1; i < m.Arguments.Count; i++)
                     {
-                        var a4 = Visit(m.Arguments[1]);
-                        objs[i - 1] = a4;
+                        objs[i - 1] = ((ConstantNode)Visit(m.Arguments[i])).Value;
                     }
-                    //var formated = string.Format(formater, objs);
-                    //Write(formated);
+                    var formated = string.Format(((ConstantNode)formater).Value.ToString(), objs);
+                    node.Body = new ConstantNode(typeof(string), formated);
                     return node;
                 case "Contains":
-                    var a = Visit(m.Arguments[0]);
-                    Visit(Expression.Equal(m.Object, Expression.Constant($"*{a}*")));
+                    node.Body = Visit(Expression.Equal(m.Object, Expression.Constant($"*{((ConstantNode)Visit(m.Arguments[0])).Value}*")));
                     return node;
                 case "StartsWith":
-                    var a1 = Visit(m.Arguments[0]);
-                    Visit(Expression.Equal(m.Object, Expression.Constant($"{a1}*")));
+                    node.Body = Visit(Expression.Equal(m.Object, Expression.Constant($"{((ConstantNode)Visit(m.Arguments[0])).Value}*")));
                     return node;
                 case "EndsWith":
-                    var a2 = Visit(m.Arguments[0]);
-                    Visit(Expression.Equal(m.Object, Expression.Constant($"*{a2}")));
+                    node.Body = Visit(Expression.Equal(m.Object, Expression.Constant($"*{((ConstantNode)Visit(m.Arguments[0])).Value}")));
                     return node;
                 default:
                     throw new NotSupportedException($"'{m.Method.Name}' is not supported");
@@ -142,7 +138,7 @@ namespace SS.LinqToSolr.ExpressionParsers
         }
 
         protected override QueryNode VisitInvocation(InvocationExpression node)
-        {            
+        {
             return Visit(node.Expression);
         }
 
@@ -160,7 +156,15 @@ namespace SS.LinqToSolr.ExpressionParsers
             {
                 return VisitMemberAccess((MemberExpression)m.Expression, m);
             }
-            throw new NotSupportedException($"The member '{m.Member.Name}' is not supported");
+            else if (m.Expression.NodeType == ExpressionType.ArrayIndex)
+            {
+                var be = (BinaryExpression)m.Expression;
+                var left = (ConstantNode)Visit(be.Left);
+                var right = (ConstantNode)Visit(be.Right);
+                var obj = ((IList<object>)left.Value)[(int)right.Value];
+                return new ConstantNode(m.Type, GetMemberValue(m, obj));
+            }
+            throw new NotSupportedException($"The member '{m.Expression.NodeType}' is not supported");
         }
 
         protected virtual QueryNode VisitMemberAccess(MemberExpression m, MemberExpression parent)
