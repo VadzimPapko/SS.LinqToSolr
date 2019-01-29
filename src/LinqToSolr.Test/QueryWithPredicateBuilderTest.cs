@@ -20,7 +20,7 @@ namespace SS.LinqToSolr.Test
             foreach (var i in list)
                 predicate = predicate.Or(p => p.Title == i);
             var query = _api.GetQueryable<TestDocument>().Where(predicate).ToString();
-            Assert.AreEqual(query, "q=(title_s:test1 OR title_s:test2)");
+            Assert.AreEqual(query, "q=title_s:test1 OR title_s:test2");
         }
 
         [TestMethod]
@@ -31,7 +31,7 @@ namespace SS.LinqToSolr.Test
             foreach (var i in list)
                 predicate = predicate.And(p => p.Title == i);
             var query = _api.GetQueryable<TestDocument>().Where(predicate).ToString();
-            Assert.AreEqual(query, "q=(title_s:test1 AND title_s:test2)");
+            Assert.AreEqual(query, "q=title_s:test1 AND title_s:test2");
         }
     }
 }

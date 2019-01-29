@@ -141,9 +141,9 @@ namespace SS.LinqToSolr.ExpressionParsers
             throw new NotImplementedException();
         }
 
-        protected override QueryNode VisitInvocation(InvocationExpression exp)
-        {
-            throw new NotImplementedException();
+        protected override QueryNode VisitInvocation(InvocationExpression node)
+        {            
+            return Visit(node.Expression);
         }
 
         protected override QueryNode VisitMemberAccess(MemberExpression m)
@@ -158,16 +158,22 @@ namespace SS.LinqToSolr.ExpressionParsers
             }
             else if (m.Expression.NodeType == ExpressionType.MemberAccess)
             {
-                if (m.Expression.NodeType == ExpressionType.MemberAccess)
-                {
-                    var childExp = (MemberExpression)m.Expression;
-                    if (childExp.Expression.NodeType == ExpressionType.Constant)
-                    {
-                        var val = GetMemberValue(childExp, ((ConstantExpression)childExp.Expression).Value);
-                        return new ConstantNode(m.Type, GetMemberValue(m, val));
-                    }
+                return VisitMemberAccess((MemberExpression)m.Expression, m);
+            }
+            throw new NotSupportedException($"The member '{m.Member.Name}' is not supported");
+        }
 
-                }
+        protected virtual QueryNode VisitMemberAccess(MemberExpression m, MemberExpression parent)
+        {
+            if (m.Expression.NodeType == ExpressionType.MemberAccess)
+            {
+                var val = (ConstantNode)VisitMemberAccess((MemberExpression)m.Expression, m);
+                return new ConstantNode(parent.Type, GetMemberValue(m, val.Value));
+            }
+            else if (m.Expression.NodeType == ExpressionType.Constant)
+            {
+                var val = GetMemberValue(m, ((ConstantExpression)m.Expression).Value);
+                return new ConstantNode(parent.Type, GetMemberValue(parent, val));
             }
             throw new NotSupportedException($"The member '{m.Member.Name}' is not supported");
         }

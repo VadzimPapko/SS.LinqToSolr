@@ -78,6 +78,12 @@ namespace SS.LinqToSolr.Translators
                         @params.Add(new Tuple<string, string>("start", TranslateBody(method.Body)));
                         break;
                     case "Count":
+                    case "First":
+                    case "FirstOrDefault":
+                    case "Last":
+                    case "LastOrDefault":
+                    case "Single":
+                    case "SingleOrDefault":
                         if (method.Body != null)
                         {
                             @params.Add(new Tuple<string, string>("q", TranslateBody(method.Body)));
@@ -86,6 +92,9 @@ namespace SS.LinqToSolr.Translators
                         break;
                     case "Dismax":
                         @params.Add(new Tuple<string, string>("defType", "dismax"));
+                        break;
+                    case "GetResponse":
+                        scalarMethodName = method.Name;
                         break;
                     default:
                         throw new NotSupportedException($"'{method.Name}' is not supported");
@@ -176,6 +185,12 @@ namespace SS.LinqToSolr.Translators
 
         protected virtual string TranslateBinaryNode(BinaryNode b)
         {
+            //PredicateBuilder
+            if (b.LeftNode is ConstantNode && b.RightNode is BinaryNode)
+            {
+                return TranslateBinaryNode((BinaryNode)b.RightNode);
+            }
+
             var sb = new StringBuilder();
 
             var left = TranslateBody(b.LeftNode);
