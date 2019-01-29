@@ -33,6 +33,7 @@ namespace SS.LinqToSolr.Translators
         public string Translate(List<MethodNode> methods, out string scalarMethodName)
         {
             scalarMethodName = null;
+            var parser = "lucene";
             var @params = new List<Tuple<string, string>>();
             foreach (var method in methods)
             {
@@ -90,11 +91,17 @@ namespace SS.LinqToSolr.Translators
                         }
                         scalarMethodName = method.Name;
                         break;
-                    case "Dismax":
-                        @params.Add(new Tuple<string, string>("defType", "dismax"));
-                        break;
                     case "GetResponse":
                         scalarMethodName = method.Name;
+                        break;
+                    case "Dismax":
+                        parser = "dismax";
+                        break;
+                    case "BoostQuery":
+                        @params.Add(new Tuple<string, string>("bq", TranslateBody(method.Body)));
+                        break;
+                    case "DismaxQueryAlt":
+                        @params.Add(new Tuple<string, string>("q.alt", TranslateBody(method.Body)));
                         break;
                     default:
                         throw new NotSupportedException($"'{method.Name}' is not supported");
@@ -104,7 +111,15 @@ namespace SS.LinqToSolr.Translators
             if (@params.Any(x => x.Item1 == "facet.field" || x.Item1 == "facet.pivot"))
                 @params.Add(new Tuple<string, string>("facet", "on"));
 
-            if (!@params.Any(x => x.Item1 == "q"))
+            if (parser == "dismax")
+            {
+                if (!@params.Any(x => x.Item1 == "q") && !@params.Any(x => x.Item1 == "q.alt"))
+                {
+                    @params.Insert(0, new Tuple<string, string>("q.alt", "*:*"));
+                }
+                @params.Insert(0, new Tuple<string, string>("defType", "dismax"));
+            }
+            else if (parser == "lucene" && !@params.Any(x => x.Item1 == "q"))
                 @params.Insert(0, new Tuple<string, string>("q", "*:*"));
 
             var queryParams = new List<string>();
