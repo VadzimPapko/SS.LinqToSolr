@@ -67,7 +67,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\src\LinqToSolr\SS.LinqToSolr.csproj">
+    <ProjectReference Include="..\LinqToSolr\SS.LinqToSolr.csproj">
       <Project>{7005d211-2b75-4b4b-9d3b-34ebcb6e01c2}</Project>
       <Name>SS.LinqToSolr</Name>
     </ProjectReference>

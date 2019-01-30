@@ -212,9 +212,9 @@ namespace SS.LinqToSolr.Translators
         protected virtual string TranslateBinaryNode(BinaryNode b)
         {
             //for ignore PredicateBuilder first node
-            if (b.LeftNode is ConstantNode && b.RightNode is BinaryNode)
+            if (b.LeftNode is ConstantNode && ((ConstantNode)b.LeftNode).Type == typeof(bool))
             {
-                return TranslateBinaryNode((BinaryNode)b.RightNode);
+                return TranslateBody(b.RightNode);
             }
 
             var sb = new StringBuilder();

@@ -38,7 +38,7 @@ namespace SS.LinqToSolr.Sitecore
             _api = new SearchContext(new System.Net.Http.HttpClient
             {
                 BaseAddress = new Uri(solrUrl)
-            }, index.Core, new FieldTranslator(index.FieldNameTranslator), new ResposeTranslator());
+            }, index.Core, new FieldTranslator(index.FieldNameTranslator), new ResposeTranslator(index.FieldNameTranslator));
         }
 
         public ISearchIndex Index { get; private set; }

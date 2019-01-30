@@ -22,11 +22,6 @@ namespace SS.LinqToSolr.Sitecore.Translators
         public string Translate(MemberInfo member, CultureInfo culture)
         {
             var fieldName = _fieldNameTranslator.GetIndexFieldName(member);
-            //var dataMemberAttribute = member.GetCustomAttribute<IndexFieldAttribute>();
-            //var fieldName = !string.IsNullOrEmpty(dataMemberAttribute?.IndexFieldName)
-            //    ? dataMemberAttribute.IndexFieldName
-            //    : member.Name;
-
             return fieldName;
         }
     }
