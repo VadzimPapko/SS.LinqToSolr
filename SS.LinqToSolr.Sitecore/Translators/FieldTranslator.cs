@@ -1,6 +1,7 @@
 ﻿using Sitecore.ContentSearch;
 using Sitecore.ContentSearch.Linq.Common;
 using SS.LinqToSolr.Translators;
+using System.Globalization;
 using System.Reflection;
 
 namespace SS.LinqToSolr.Sitecore.Translators
@@ -18,7 +19,7 @@ namespace SS.LinqToSolr.Sitecore.Translators
             _fieldNameTranslator.Accept(executionContext);
         }
 
-        public string Translate(MemberInfo member)
+        public string Translate(MemberInfo member, CultureInfo culture)
         {
             var fieldName = _fieldNameTranslator.GetIndexFieldName(member);
             //var dataMemberAttribute = member.GetCustomAttribute<IndexFieldAttribute>();

@@ -1,9 +1,10 @@
-﻿using System.Reflection;
+﻿using System.Globalization;
+using System.Reflection;
 
 namespace SS.LinqToSolr.Translators
 {
     public interface IFieldTranslator
     {
-        string Translate(MemberInfo member);
+        string Translate(MemberInfo member, CultureInfo culture = null);
     }
 }

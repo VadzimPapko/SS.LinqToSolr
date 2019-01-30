@@ -79,8 +79,8 @@ namespace SS.LinqToSolr.Sitecore
         {
             SolrSearchFieldConfiguration fieldConfiguration = index.Configuration.FieldMap.GetFieldConfiguration(fieldName.ToLowerInvariant()) as SolrSearchFieldConfiguration;
             if (fieldConfiguration != null)
-                fieldName = fieldConfiguration.FormatFieldName(fieldName, Index.Schema, (string)null, settings.DefaultLanguage());
-            IEnumerable<SearchIndexTerm> searchIndexTerms = (IEnumerable<SearchIndexTerm>)new HashSet<SearchIndexTerm>();
+                fieldName = fieldConfiguration.FormatFieldName(fieldName, Index.Schema, null, settings.DefaultLanguage());
+            IEnumerable<SearchIndexTerm> searchIndexTerms = new HashSet<SearchIndexTerm>();
             return searchIndexTerms;
         }
 
