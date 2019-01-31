@@ -12,9 +12,7 @@ using System.Collections.Generic;
 namespace SS.LinqToSolr
 {
     public class SolrQueryProvider<T> : QueryProvider
-    {
-        private QueryableMethodVisitor _visitor { get; set; }
-
+    {        
         protected ISearchContext _solrService;
         protected IFieldTranslator _fieldTranslator;
         protected INodeTranslator _nodeTranslator;
@@ -22,10 +20,7 @@ namespace SS.LinqToSolr
         public SolrQueryProvider(ISearchContext solrService, IFieldTranslator fieldTranslator)
         {
             _solrService = solrService;
-            _fieldTranslator = fieldTranslator;
-
-            var bodyVisitor = new QueryableMethodBodyVisitor(typeof(T));
-            _visitor = new QueryableMethodVisitor(bodyVisitor);
+            _fieldTranslator = fieldTranslator;            
 
             _nodeTranslator = new NodeTranslator(_fieldTranslator);
         }
@@ -50,7 +45,9 @@ namespace SS.LinqToSolr
         }
         protected virtual List<MethodNode> Parse(Expression expression)
         {
-            return _visitor.Parse(expression);
+            var bodyVisitor = new QueryableMethodBodyVisitor(typeof(T));
+            var visitor = new QueryableMethodVisitor(bodyVisitor);
+            return visitor.Parse(expression);
         }
 
         protected virtual object ApplyScalarMethod(string scalarMethodName, Response<T> response)

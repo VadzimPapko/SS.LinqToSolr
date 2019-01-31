@@ -92,7 +92,7 @@ namespace SS.LinqToSolr.Test
         [TestMethod]
         public void Count()
         {
-            var count = _api.GetQueryable<TestDocument>().Where(x => x.Title == "smth").Count();
+            var count = _api.GetQueryable<TestDocument>().Where(x => x.Title == "smth").Filter(x => x.Type == "").Count();
             //Assert.AreEqual(_api.LastQuery, "q=(title_s:smth)");
             Assert.AreEqual(count, 3);
             var count2 = _api.GetQueryable<TestDocument>().Count();
@@ -101,6 +101,15 @@ namespace SS.LinqToSolr.Test
             var count3 = _api.GetQueryable<TestDocument>().Count(x => x.Title == "smth");
             //Assert.AreEqual(_api.LastQuery, "q=(title_s:smth)");
             Assert.AreEqual(count3, 3);
+        }
+
+        [TestMethod]
+        public void SwitchContext()
+        {
+            var query = _api.GetQueryable<TestDocument>().Where(x => x.Title == "smth");
+            Assert.AreEqual(query.Count(), 3);
+            var result = query.ToList();
+            Assert.IsNotNull(result);
         }
     }
 }

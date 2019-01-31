@@ -9,6 +9,7 @@ using SS.LinqToSolr.Sitecore.Translators;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using SolrFieldNameTranslator = SS.LinqToSolr.Sitecore.Translators.SolrFieldNameTranslator;
 
 namespace SS.LinqToSolr.Sitecore
 {
@@ -35,10 +36,13 @@ namespace SS.LinqToSolr.Sitecore
 
             var solrUrl = $"{SolrContentSearchManager.SolrSettings.ServiceAddress().TrimEnd('/')}/";
 
+            //var fieldTranslator = new SolrFieldNameTranslator(index);
+
             _api = new SearchContext(new System.Net.Http.HttpClient
             {
                 BaseAddress = new Uri(solrUrl)
             }, index.Core, new FieldTranslator(index.FieldNameTranslator), new ResposeTranslator(index.FieldNameTranslator));
+            //}, index.Core, new FieldTranslator(fieldTranslator), new ResposeTranslator(fieldTranslator));
         }
 
         public ISearchIndex Index { get; private set; }

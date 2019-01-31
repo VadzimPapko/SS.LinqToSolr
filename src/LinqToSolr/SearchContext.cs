@@ -43,7 +43,7 @@ namespace SS.LinqToSolr
 
         public virtual Response<T> Search<T>(string query)
         {
-            query = $"{query}&wt=json";
+            query = $"{query}&fl=*,score&wt=json";
             LastQuery = query;
 
             var httpMessage = TranslateQueryToPostMessage(query);

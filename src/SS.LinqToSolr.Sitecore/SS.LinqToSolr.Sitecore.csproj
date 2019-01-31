@@ -62,6 +62,7 @@
     <Compile Include="SSSolrSearchIndex.cs" />
     <Compile Include="Translators\FieldTranslator.cs" />
     <Compile Include="Translators\ResposeTranslator.cs" />
+    <Compile Include="Translators\SolrFieldNameTranslator.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
