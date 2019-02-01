@@ -14,7 +14,7 @@ namespace SS.LinqToSolr.Test
 
         public IQueryable<T> GetQueryable<T>()
         {
-            return new SolrQueryProvider<T>(this, new NewtonsoftJsonFieldTranslator()).GetQueryable();
+            return new SolrQueryProvider<T>(this, new NodeTranslator(new NewtonsoftJsonFieldTranslator())).GetQueryable();
         }
 
         public Response<T> Search<T>(string query)

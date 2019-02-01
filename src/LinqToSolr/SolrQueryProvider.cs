@@ -1,5 +1,4 @@
 ﻿using SS.LinqToSolr.Common;
-using SS.LinqToSolr.Models;
 using SS.LinqToSolr.ExpressionParsers;
 using System.Linq.Expressions;
 using SS.LinqToSolr.Models.Query;
@@ -14,15 +13,12 @@ namespace SS.LinqToSolr
     public class SolrQueryProvider<T> : QueryProvider
     {        
         protected ISearchContext _solrService;
-        protected IFieldTranslator _fieldTranslator;
         protected INodeTranslator _nodeTranslator;
 
-        public SolrQueryProvider(ISearchContext solrService, IFieldTranslator fieldTranslator)
+        public SolrQueryProvider(ISearchContext solrService, INodeTranslator nodeTranslator)
         {
             _solrService = solrService;
-            _fieldTranslator = fieldTranslator;            
-
-            _nodeTranslator = new NodeTranslator(_fieldTranslator);
+            _nodeTranslator = nodeTranslator;
         }
 
         public override object Execute(Expression expression)

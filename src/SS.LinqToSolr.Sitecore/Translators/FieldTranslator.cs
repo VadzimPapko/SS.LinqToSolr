@@ -14,12 +14,12 @@ namespace SS.LinqToSolr.Sitecore.Translators
             _fieldNameTranslator = fieldNameTranslator;
         }
 
-        public void Accept(IExecutionContext executionContext)
+        public void Accept(CultureInfo culture)
         {
-            _fieldNameTranslator.Accept(executionContext);
+            _fieldNameTranslator.Accept(new CultureExecutionContext(culture));
         }
 
-        public string Translate(MemberInfo member, CultureInfo culture)
+        public string Translate(MemberInfo member)
         {
             var fieldName = _fieldNameTranslator.GetIndexFieldName(member);
             return fieldName;

@@ -1,12 +1,10 @@
-﻿using SS.LinqToSolr.Models;
-using SS.LinqToSolr.Models.SearchResponse;
+﻿using SS.LinqToSolr.Models.SearchResponse;
 using System;
 using System.Linq;
 using System.Net.Http;
 using System.Web;
 using System.Collections.Generic;
 using SS.LinqToSolr.Translators;
-using SS.LinqToSolr.ExpressionParsers;
 
 namespace SS.LinqToSolr
 {
@@ -17,28 +15,28 @@ namespace SS.LinqToSolr
         public string Core { get; set; }
 
         protected readonly HttpClient _client;
-        protected IFieldTranslator _fieldTranslator;
+        protected INodeTranslator _nodeTranslator;
         protected IResposeTranslator _resposeTranslator;
 
-        public SearchContext(HttpClient client, string core, IFieldTranslator fieldTranslator = null, IResposeTranslator resposeTranslator = null)
+        public SearchContext(HttpClient client, string core, INodeTranslator nodeTranslator = null, IResposeTranslator resposeTranslator = null)
         {
             Core = core;
             _client = client;
 
-            if (fieldTranslator == null)
-                _fieldTranslator = new NewtonsoftJsonFieldTranslator();
+            if (nodeTranslator == null)
+                _nodeTranslator = new NodeTranslator(new NewtonsoftJsonFieldTranslator());
             else
-                _fieldTranslator = fieldTranslator;
+                _nodeTranslator = nodeTranslator;
 
             if (resposeTranslator == null)
                 _resposeTranslator = new NewtonsoftJsonResposeTranslator();
             else
-                _resposeTranslator = resposeTranslator;            
+                _resposeTranslator = resposeTranslator;
         }
 
         public virtual IQueryable<T> GetQueryable<T>()
         {
-            return new SolrQueryProvider<T>(this, _fieldTranslator).GetQueryable();
+            return new SolrQueryProvider<T>(this, _nodeTranslator).GetQueryable();
         }
 
         public virtual Response<T> Search<T>(string query)

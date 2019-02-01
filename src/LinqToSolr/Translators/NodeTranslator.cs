@@ -14,84 +14,16 @@ namespace SS.LinqToSolr.Translators
         public NodeTranslator(IFieldTranslator fieldTranslator)
         {
             _fieldTranslator = fieldTranslator;
-        }        
+        }
 
-        public string Translate(List<MethodNode> methods, out string scalarMethodName)
+        public virtual string Translate(List<MethodNode> methods, out string scalarMethodName)
         {
             scalarMethodName = null;
-            var parser = QueryParser.Default;
+            QueryParser parser = QueryParser.Default;
             var @params = new List<Tuple<string, string>>();
             foreach (var method in methods)
             {
-                switch (method.Name)
-                {
-                    case "Query":
-                    case "Where":
-                        @params.Add(new Tuple<string, string>("q", TranslateBody(method.Body)));
-                        break;
-                    case "Filter":
-                        @params.Add(new Tuple<string, string>("fq", TranslateBody(method.Body)));
-                        break;
-                    case "Facet":
-                        var facet = (FacetNode)method.Body;
-                        var facetFieldName = TranslateBody(facet.Field);
-                        if (facet.IsMultiFacet && facet.Values.Any())
-                        {
-                            @params.Add(new Tuple<string, string>("facet.field", $"{{!ex={facetFieldName}}}{facetFieldName}"));
-                            @params.Add(new Tuple<string, string>("fq", $"{{!tag={facetFieldName}}}{facetFieldName}:{string.Join(" OR ", facet.Values).ToSolrGroup()}"));
-                        }
-                        else
-                        {
-                            @params.Add(new Tuple<string, string>("facet.field", facetFieldName));
-                        }
-                        break;
-                    case "PivotFacet":
-                        var pivotFacet = (PivotFacetNode)method.Body;
-                        var fields = pivotFacet.Facets.Select(x => TranslateBody(((FacetNode)x.Body).Field));
-                        @params.Add(new Tuple<string, string>("facet.pivot", string.Join(",", fields)));
-                        break;
-                    case "OrderBy":
-                    case "ThenBy":
-                    case "OrderByDescending":
-                    case "ThenByDescending":
-                        var field = TranslateBody(method.Body);
-                        var direction = method.Name.EndsWith("Descending") ? "desc" : "asc";
-                        @params.Add(new Tuple<string, string>("sort", $"{field} {direction}"));
-                        break;
-                    case "Take":
-                        @params.Add(new Tuple<string, string>("rows", TranslateBody(method.Body)));
-                        break;
-                    case "Skip":
-                        @params.Add(new Tuple<string, string>("start", TranslateBody(method.Body)));
-                        break;
-                    case "Count":
-                    case "First":
-                    case "FirstOrDefault":
-                    case "Last":
-                    case "LastOrDefault":
-                    case "Single":
-                    case "SingleOrDefault":
-                        if (method.Body != null)
-                        {
-                            @params.Add(new Tuple<string, string>("q", TranslateBody(method.Body)));
-                        }
-                        scalarMethodName = method.Name;
-                        break;
-                    case "GetResponse":
-                        scalarMethodName = method.Name;
-                        break;
-                    case "Dismax":
-                        parser = QueryParser.Dismax;
-                        break;
-                    case "BoostQuery":
-                        @params.Add(new Tuple<string, string>("bq", TranslateBody(method.Body)));
-                        break;
-                    case "DismaxQueryAlt":
-                        @params.Add(new Tuple<string, string>("q.alt", TranslateBody(method.Body)));
-                        break;
-                    default:
-                        throw new NotSupportedException($"'{method.Name}' is not supported");
-                }
+                @params.AddRange(TranslateMethod(method, ref parser, out scalarMethodName));
             }
 
             if (@params.Any(x => x.Item1 == "facet.field" || x.Item1 == "facet.pivot"))
@@ -138,6 +70,82 @@ namespace SS.LinqToSolr.Translators
             return string.Join("&", queryParams);
         }
 
+        public virtual List<Tuple<string, string>> TranslateMethod(MethodNode method, ref QueryParser parser, out string scalarMethodName)
+        {
+            scalarMethodName = null;
+            var @params = new List<Tuple<string, string>>();
+            switch (method.Name)
+            {
+                case "Query":
+                case "Where":
+                    @params.Add(new Tuple<string, string>("q", TranslateBody(method.Body)));
+                    break;
+                case "Filter":
+                    @params.Add(new Tuple<string, string>("fq", TranslateBody(method.Body)));
+                    break;
+                case "Facet":
+                    var facet = (FacetNode)method.Body;
+                    var facetFieldName = TranslateBody(facet.Field);
+                    if (facet.IsMultiFacet && facet.Values.Any())
+                    {
+                        @params.Add(new Tuple<string, string>("facet.field", $"{{!ex={facetFieldName}}}{facetFieldName}"));
+                        @params.Add(new Tuple<string, string>("fq", $"{{!tag={facetFieldName}}}{facetFieldName}:{string.Join(" OR ", facet.Values).ToSolrGroup()}"));
+                    }
+                    else
+                    {
+                        @params.Add(new Tuple<string, string>("facet.field", facetFieldName));
+                    }
+                    break;
+                case "PivotFacet":
+                    var pivotFacet = (PivotFacetNode)method.Body;
+                    var fields = pivotFacet.Facets.Select(x => TranslateBody(((FacetNode)x.Body).Field));
+                    @params.Add(new Tuple<string, string>("facet.pivot", string.Join(",", fields)));
+                    break;
+                case "OrderBy":
+                case "ThenBy":
+                case "OrderByDescending":
+                case "ThenByDescending":
+                    var field = TranslateBody(method.Body);
+                    var direction = method.Name.EndsWith("Descending") ? "desc" : "asc";
+                    @params.Add(new Tuple<string, string>("sort", $"{field} {direction}"));
+                    break;
+                case "Take":
+                    @params.Add(new Tuple<string, string>("rows", TranslateBody(method.Body)));
+                    break;
+                case "Skip":
+                    @params.Add(new Tuple<string, string>("start", TranslateBody(method.Body)));
+                    break;
+                case "Count":
+                case "First":
+                case "FirstOrDefault":
+                case "Last":
+                case "LastOrDefault":
+                case "Single":
+                case "SingleOrDefault":
+                    if (method.Body != null)
+                    {
+                        @params.Add(new Tuple<string, string>("q", TranslateBody(method.Body)));
+                    }
+                    scalarMethodName = method.Name;
+                    break;
+                case "GetResponse":
+                    scalarMethodName = method.Name;
+                    break;
+                case "Dismax":
+                    parser = QueryParser.Dismax;
+                    break;
+                case "BoostQuery":
+                    @params.Add(new Tuple<string, string>("bq", TranslateBody(method.Body)));
+                    break;
+                case "DismaxQueryAlt":
+                    @params.Add(new Tuple<string, string>("q.alt", TranslateBody(method.Body)));
+                    break;
+                default:
+                    throw new NotSupportedException($"'{method.Name}' is not supported");
+            }
+            return @params;
+        }
+
         protected virtual string TranslateBody(IQueryNode node)
         {
             var type = node.GetType();
@@ -161,7 +169,7 @@ namespace SS.LinqToSolr.Translators
             throw new NotSupportedException($"'{type}' is not supported");
         }
 
-        private string TranslateSubMethod(MethodNode node)
+        protected virtual string TranslateSubMethod(MethodNode node)
         {
             switch (node.Name)
             {
@@ -176,7 +184,7 @@ namespace SS.LinqToSolr.Translators
             }
         }
 
-        private string TranslateConstantNode(ConstantNode c)
+        protected virtual string TranslateConstantNode(ConstantNode c)
         {
             if (c.Type == typeof(string))
             {

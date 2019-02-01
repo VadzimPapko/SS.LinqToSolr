@@ -5,6 +5,7 @@ namespace SS.LinqToSolr.Translators
 {
     public interface IFieldTranslator
     {
-        string Translate(MemberInfo member, CultureInfo culture = null);
+        string Translate(MemberInfo member);
+        void Accept(CultureInfo culture);
     }
 }
