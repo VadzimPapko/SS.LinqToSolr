@@ -33,6 +33,8 @@ namespace SS.LinqToSolr.Sitecore.Translators
 
             public CustomContractResolver(Type type, FieldNameTranslator fieldNameTranslator)
             {
+                PropertyMappings.Add("score", "score");
+
                 _fieldNameTranslator = fieldNameTranslator;
                 var props = type.GetProperties();
                 foreach (var prop in props)
@@ -40,14 +42,16 @@ namespace SS.LinqToSolr.Sitecore.Translators
                     if (Attribute.IsDefined(prop, typeof(IndexFieldAttribute)))
                     {
                         var fieldName = _fieldNameTranslator.GetIndexFieldName(prop);
-                        PropertyMappings.Add(prop.Name, fieldName);
+                        var key = prop.Name.ToLower();
+                        if (!PropertyMappings.ContainsKey(key))
+                            PropertyMappings.Add(key, fieldName);
                     }
                 }
             }
 
             protected override string ResolvePropertyName(string propertyName)
             {
-                var resolved = PropertyMappings.TryGetValue(propertyName, out string resolvedName);
+                var resolved = PropertyMappings.TryGetValue(propertyName.ToLower(), out string resolvedName);
                 return resolved ? resolvedName : base.ResolvePropertyName(propertyName);
             }
         }
